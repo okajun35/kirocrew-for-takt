@@ -156,3 +156,27 @@ export interface ApiErrorBody {
   error?: string
   code?: string
 }
+
+export interface SettingsResult {
+  settings: { taktMcpPath?: string | null }
+  taktMcp: {
+    path: string | null
+    source: string | null
+    pinned: string | null
+    error?: string
+  }
+}
+
+export interface DirectoriesResult {
+  path: string
+  parent: string | null
+  directories: { name: string; path: string; hasGit?: boolean; hasTakt?: boolean }[]
+  truncated: boolean
+}
+
+export interface TaktConfigResult {
+  global: { path: string; exists: boolean; config: Record<string, unknown>; error?: string }
+  project: { path: string; exists: boolean; config: Record<string, unknown>; error?: string }
+  writableKeys: string[]
+  revision: string | null
+}

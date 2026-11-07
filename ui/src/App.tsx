@@ -16,6 +16,7 @@ import type { ProjectsResult } from './types'
 import { API, errMessage } from './util'
 import GoalsTab from './GoalsTab'
 import TaktTab from './TaktTab'
+import SettingsTab from './SettingsTab'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -27,7 +28,7 @@ const queryClient = new QueryClient({
   },
 })
 
-type TabKey = 'goals' | 'takt'
+type TabKey = 'goals' | 'takt' | 'settings'
 
 function Page() {
   const api = useAppApi()
@@ -140,13 +141,16 @@ function Page() {
                 segments={[
                   { key: 'goals', label: S.tabGoals },
                   { key: 'takt', label: S.tabTakt },
+                  { key: 'settings', label: S.tabSettings },
                 ]}
                 value={tab}
                 onChange={setTab}
                 ariaLabel={S.appTitle}
               />
             </div>
-            {project ? (
+            {tab === 'settings' ? (
+              <SettingsTab active={active} project={project} />
+            ) : project ? (
               tab === 'goals' ? (
                 <GoalsTab project={project} active={active} onOpenRun={openRun} />
               ) : (

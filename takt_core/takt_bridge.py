@@ -25,33 +25,68 @@ _CLIENT = {"name": "for-takt", "version": "0.2.0"}
 _STDERR_TAIL = 20
 
 
+def _version_key(path):
+    m = re.search(r"node/v?(\d+)\.(\d+)\.(\d+)", path)
+    return tuple(int(x) for x in m.groups()) if m else (0, 0, 0)
+
+
+def _nvm_candidates():
+    candidates = glob.glob(
+        os.path.expanduser("~/.nvm/versions/node/*/bin/takt-mcp")
+    )
+    candidates = [c for c in candidates if os.access(c, os.X_OK)]
+    candidates.sort(key=_version_key, reverse=True)
+    return candidates
+
+
+_NOT_FOUND = (
+    "takt-mcp not found. Install TAKT (npm i -g takt), put takt-mcp on "
+    "PATH, pin its path in the app settings, or set TAKT_MCP_BIN."
+)
+
+
 def find_takt_mcp():
+    """Resolve the takt-mcp binary.
+
+    Order: the app setting (data/settings.json `taktMcpPath`, settable from
+    the dashboard) → $TAKT_MCP_BIN → PATH → newest nvm install. A pinned or
+    env-var path that is not executable is an error, not a fallback.
+    """
+    return _resolve()["path"]
+
+
+def resolve_takt_mcp():
+    """Like find_takt_mcp but reports which source produced the path."""
+    return _resolve()
+
+
+def _resolve():
+    try:
+        from . import settings
+
+        pinned = settings.get_takt_mcp_path()
+    except Exception:  # pragma: no cover - settings unreadable
+        pinned = None
+    if pinned:
+        if os.path.isfile(pinned) and os.access(pinned, os.X_OK):
+            return {"path": pinned, "source": "settings", "pinned": pinned}
+        raise ToolError(
+            f"configured taktMcpPath is not an executable file: {pinned}"
+        )
     env_bin = os.environ.get(TAKT_MCP_ENV)
     if env_bin:
         if os.path.isfile(env_bin) and os.access(env_bin, os.X_OK):
-            return env_bin
+            return {"path": env_bin, "source": TAKT_MCP_ENV, "pinned": pinned}
         raise ToolError(
             f"{TAKT_MCP_ENV} is set but not an executable file: {env_bin}"
         )
     found = shutil.which("takt-mcp")
     if found:
-        return found
-    candidates = glob.glob(
-        os.path.expanduser("~/.nvm/versions/node/*/bin/takt-mcp")
-    )
-
-    def version_key(path):
-        m = re.search(r"node/v?(\d+)\.(\d+)\.(\d+)", path)
-        return tuple(int(x) for x in m.groups()) if m else (0, 0, 0)
-
-    candidates = [c for c in candidates if os.access(c, os.X_OK)]
+        return {"path": found, "source": "PATH", "pinned": pinned}
+    candidates = _nvm_candidates()
     if candidates:
-        candidates.sort(key=version_key, reverse=True)
-        return candidates[0]
-    raise ToolError(
-        "takt-mcp not found. Install TAKT (npm i -g takt), put takt-mcp on "
-        "PATH, or set the TAKT_MCP_BIN environment variable to its path."
-    )
+        return {"path": candidates[0], "source": "nvm", "pinned": pinned}
+    raise ToolError(_NOT_FOUND)
 
 
 def _drain(stream, buf):

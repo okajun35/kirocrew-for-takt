@@ -13,7 +13,15 @@ import logging
 
 from aiohttp import web
 
-from ..takt_core import goals, gitops, hostsec, projects, takt_bridge, takt_files
+from ..takt_core import (
+    goals,
+    gitops,
+    hostsec,
+    projects,
+    settings,
+    takt_bridge,
+    takt_files,
+)
 from ..takt_core.util import ToolError, int_arg, now_iso, str_arg
 
 #: Largest accepted request body (reasons and answers are the big fields).
@@ -208,6 +216,41 @@ def _remove_project(body):
 
 add_project = _handle_post(_add_project, "project_add")
 remove_project = _handle_post(_remove_project, "project_remove")
+
+
+# ---------------------------------------------------------------------------
+# settings (takt-mcp binary pin)
+# ---------------------------------------------------------------------------
+
+def _settings_view():
+    out = {"settings": settings.get_settings()}
+    try:
+        out["taktMcp"] = takt_bridge.resolve_takt_mcp()
+    except ToolError as e:
+        out["taktMcp"] = {
+            "path": None,
+            "source": None,
+            "pinned": settings.get_takt_mcp_path(),
+            "error": str(e),
+        }
+    return out
+
+
+@_handle
+def get_settings(request):
+    return _settings_view()
+
+
+def _set_takt_mcp(body):
+    if "path" not in body or (
+        body["path"] is not None and not isinstance(body["path"], str)
+    ):
+        raise ToolError("path must be an absolute path or null")
+    settings.set_takt_mcp_path(body["path"])
+    return _settings_view()
+
+
+set_takt_mcp = _handle_post(_set_takt_mcp, "settings_takt_mcp")
 
 
 # ---------------------------------------------------------------------------

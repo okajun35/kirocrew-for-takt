@@ -103,6 +103,44 @@ export const S = {
   errorConflict: '他の変更と競合しました',
   errorInternal: '内部エラーが発生しました',
   errorGeneric: 'エラーが発生しました',
+
+  tabSettings: '設定',
+
+  settingsTaktMcp: 'takt-mcp 実行ファイル',
+  settingsTaktMcpHint: '解決順: 設定 → TAKT_MCP_BIN → PATH → nvm。空欄で保存すると自動探索に戻ります。',
+  settingsResolved: (src: string) => `解決済み（${src}）`,
+  settingsNotFound: '見つかりません',
+  settingsPathPlaceholder: '/path/to/takt-mcp',
+  settingsSave: '保存',
+  settingsClear: '自動探索に戻す',
+  settingsPinnedAt: (p: string) => `固定: ${p}`,
+  settingsAuto: '固定なし（自動探索）',
+
+  browseTitle: 'ディレクトリを選択',
+  browseUp: '上へ',
+  browsePick: 'このディレクトリを登録',
+  browseGit: 'git',
+  browseTakt: 'TAKT',
+  browseTruncated: '（多すぎるため一部のみ表示）',
+  browseOrType: 'または直接パスを入力',
+
+  configTitle: 'TAKT 設定',
+  configGlobal: 'グローバル（~/.takt/config.yaml）',
+  configProject: 'プロジェクト（.takt/config.yaml・読み取り専用）',
+  configKey: 'キー',
+  configValue: '値',
+  configSource: '出所',
+  configEdit: '編集',
+  configSave: '保存',
+  configNotFound: 'config.yaml がありません',
+  configRevisionLost: '設定ファイルが外部で変更されました。再読み込みしてください',
+
+  cloneTitle: 'リポジトリを clone して登録',
+  cloneUrl: 'clone URL',
+  cloneUrlHint: 'https:// または git@ の git URL',
+  cloneParent: 'clone 先の親ディレクトリ',
+  cloneName: 'ディレクトリ名（空欄は URL から推測）',
+  cloneSubmit: 'clone して登録',
 } as const
 
 // error.code -> strings key の対応表

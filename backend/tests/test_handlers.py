@@ -26,7 +26,7 @@ routes_mod = load_app_module("backend.routes")
 class RouteRegistrationTests(BackendTestCase):
     def test_register_routes_shape(self):
         routes = routes_mod.register_routes(self.ctx)
-        self.assertEqual(len(routes), 13)
+        self.assertEqual(len(routes), 15)
         for r in routes:
             self.assertIn(
                 r.method, {"GET", "POST", "PUT", "DELETE", "PATCH"}
@@ -302,6 +302,54 @@ class GoalHandlerTests(BackendTestCase):
         self.assertEqual(resp.status, 200)
         self.assertEqual(len(body["goals"]), 1)
         self.assertEqual(body["goals"][0]["status"], "active")
+
+
+class SettingsTests(BackendTestCase):
+    async def test_settings_get_and_pin(self):
+        resp, body = await call(
+            handlers.get_settings, get_req("/x"), self.ctx
+        )
+        self.assertEqual(resp.status, 200)
+        self.assertIn("taktMcp", body)
+
+        # pin to a real executable
+        import stat as _stat
+
+        fake = Path(self.tmp.name) / "fake-takt-mcp"
+        fake.write_text("#!/bin/sh\n")
+        fake.chmod(fake.stat().st_mode | _stat.S_IXUSR)
+
+        resp, body = await call(
+            handlers.set_takt_mcp,
+            post_req("/x", {"path": str(fake)}),
+            self.ctx,
+        )
+        self.assertEqual(resp.status, 200)
+        self.assertEqual(body["taktMcp"]["path"], str(fake))
+        self.assertEqual(body["taktMcp"]["source"], "settings")
+
+        # clear
+        resp, body = await call(
+            handlers.set_takt_mcp,
+            post_req("/x", {"path": None}),
+            self.ctx,
+        )
+        self.assertEqual(resp.status, 200)
+        self.assertIsNone(body["taktMcp"]["pinned"])
+
+    async def test_settings_pin_rejects_nonexistent(self):
+        resp, body = await call(
+            handlers.set_takt_mcp,
+            post_req("/x", {"path": "/no/such/takt-mcp"}),
+            self.ctx,
+        )
+        self.assertEqual(resp.status, 400)
+
+    async def test_settings_pin_rejects_missing_key(self):
+        resp, body = await call(
+            handlers.set_takt_mcp, post_req("/x", {}), self.ctx
+        )
+        self.assertEqual(resp.status, 400)
 
 
 class HardeningTests(BackendTestCase):

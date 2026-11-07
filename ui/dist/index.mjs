@@ -1,7 +1,7 @@
-import { jsxs as n, jsx as e, Fragment as q } from "react/jsx-runtime";
-import { useAppApi as G, fmtRelative as oe, fmtDateTime as U, fmtNumber as se, useAppInfo as de } from "@kirocrew/app-sdk";
-import { Card as b, CardTitle as E, ErrorNotice as F, EmptyState as H, Clickable as V, Badge as L, Btn as C, Input as Z, Modal as W, MarkdownRenderer as ue, StatCard as me, PageHeader as pe, Select as he, SegmentedControl as fe } from "@kirocrew/app-sdk/ui";
-import { useQuery as M, useQueryClient as ce, useMutation as Y, QueryClient as ge, QueryClientProvider as xe } from "@tanstack/react-query";
+import { jsxs as s, jsx as e, Fragment as E } from "react/jsx-runtime";
+import { useAppApi as O, fmtRelative as ie, fmtDateTime as z, fmtNumber as le, useAppInfo as de } from "@kirocrew/app-sdk";
+import { Card as S, CardTitle as $, ErrorNotice as R, EmptyState as G, Clickable as X, Badge as M, Btn as T, Input as Z, Modal as W, MarkdownRenderer as ue, StatCard as me, PageHeader as pe, Select as he, SegmentedControl as ge } from "@kirocrew/app-sdk/ui";
+import { useQuery as K, useQueryClient as te, useMutation as J, QueryClient as fe, QueryClientProvider as xe } from "@tanstack/react-query";
 import { useState as v, useRef as Ne, useEffect as ee, useMemo as ye } from "react";
 const t = {
   appTitle: "TAKT",
@@ -16,7 +16,7 @@ const t = {
   projectAddHint: "git リポジトリのトップレベルの絶対パス",
   projectRemove: "削除",
   projectRemoveTitle: "プロジェクトを削除",
-  projectRemoveConfirm: (r) => `${r} を登録から外しますか？ goal の記録は残ります。`,
+  projectRemoveConfirm: (n) => `${n} を登録から外しますか？ goal の記録は残ります。`,
   projectMissing: "見つかりません",
   cancel: "キャンセル",
   submit: "送信",
@@ -40,8 +40,8 @@ const t = {
   taktStatus: "TAKT",
   questions: "質問",
   questionAnswerPlaceholder: "回答を入力",
-  answerConfirm: (r) => `質問への回答を送信しますか？
-「${r}」`,
+  answerConfirm: (n) => `質問への回答を送信しますか？
+「${n}」`,
   workLog: "作業記録",
   pause: "一時停止",
   resume: "再開",
@@ -68,7 +68,7 @@ const t = {
   colStarted: "開始",
   colCompleted: "終了",
   colGoals: "関連 goal",
-  failureAt: (r) => r ? `失敗: ${r}` : "失敗",
+  failureAt: (n) => n ? `失敗: ${n}` : "失敗",
   runMeta: "Run メタ情報",
   runCurrentStep: "現在の step",
   runIteration: "イテレーション",
@@ -97,8 +97,41 @@ const t = {
   errorNotFound: "見つかりません",
   errorConflict: "他の変更と競合しました",
   errorInternal: "内部エラーが発生しました",
-  errorGeneric: "エラーが発生しました"
-}, le = {
+  errorGeneric: "エラーが発生しました",
+  tabSettings: "設定",
+  settingsTaktMcp: "takt-mcp 実行ファイル",
+  settingsTaktMcpHint: "解決順: 設定 → TAKT_MCP_BIN → PATH → nvm。空欄で保存すると自動探索に戻ります。",
+  settingsResolved: (n) => `解決済み（${n}）`,
+  settingsNotFound: "見つかりません",
+  settingsPathPlaceholder: "/path/to/takt-mcp",
+  settingsSave: "保存",
+  settingsClear: "自動探索に戻す",
+  settingsPinnedAt: (n) => `固定: ${n}`,
+  settingsAuto: "固定なし（自動探索）",
+  browseTitle: "ディレクトリを選択",
+  browseUp: "上へ",
+  browsePick: "このディレクトリを登録",
+  browseGit: "git",
+  browseTakt: "TAKT",
+  browseTruncated: "（多すぎるため一部のみ表示）",
+  browseOrType: "または直接パスを入力",
+  configTitle: "TAKT 設定",
+  configGlobal: "グローバル（~/.takt/config.yaml）",
+  configProject: "プロジェクト（.takt/config.yaml・読み取り専用）",
+  configKey: "キー",
+  configValue: "値",
+  configSource: "出所",
+  configEdit: "編集",
+  configSave: "保存",
+  configNotFound: "config.yaml がありません",
+  configRevisionLost: "設定ファイルが外部で変更されました。再読み込みしてください",
+  cloneTitle: "リポジトリを clone して登録",
+  cloneUrl: "clone URL",
+  cloneUrlHint: "https:// または git@ の git URL",
+  cloneParent: "clone 先の親ディレクトリ",
+  cloneName: "ディレクトリ名（空欄は URL から推測）",
+  cloneSubmit: "clone して登録"
+}, oe = {
   bad_request: t.errorBadRequest,
   unauthorized: t.errorUnauthorized,
   owner_only: t.errorOwnerOnly,
@@ -107,9 +140,9 @@ const t = {
   not_found: t.errorNotFound,
   conflict: t.errorConflict,
   internal: t.errorInternal
-}, R = "/api/apps/for-takt", A = encodeURIComponent;
-function J(r) {
-  switch (r) {
+}, C = "/api/apps/for-takt", P = encodeURIComponent;
+function V(n) {
+  switch (n) {
     case "active":
     case "completed":
       return "ok";
@@ -127,8 +160,8 @@ function J(r) {
       return "muted";
   }
 }
-function ie(r) {
-  switch (r) {
+function ce(n) {
+  switch (n) {
     case "draft":
       return t.statusDraft;
     case "active":
@@ -142,26 +175,26 @@ function ie(r) {
     case "aborted":
       return t.statusAborted;
     default:
-      return r ?? "";
+      return n ?? "";
   }
 }
-function ke(r) {
-  return r ? r.slice(0, 8) : "—";
+function ke(n) {
+  return n ? n.slice(0, 8) : "—";
 }
-function be(r) {
-  return r ? r.slice(0, 8) : "—";
+function be(n) {
+  return n ? n.slice(0, 8) : "—";
 }
-function Q(r) {
-  if (r && typeof r == "object") {
-    const d = r;
+function F(n) {
+  if (n && typeof n == "object") {
+    const d = n;
     if (typeof d.body == "string" && d.body) {
       try {
-        const m = JSON.parse(d.body);
-        if (m && typeof m.code == "string" && le[m.code]) {
-          const f = typeof m.error == "string" ? m.error : "";
-          return `${le[m.code]}${f ? `（${f}）` : ""}`;
+        const u = JSON.parse(d.body);
+        if (u && typeof u.code == "string" && oe[u.code]) {
+          const g = typeof u.error == "string" ? u.error : "";
+          return `${oe[u.code]}${g ? `（${g}）` : ""}`;
         }
-        if (m && typeof m.error == "string") return m.error;
+        if (u && typeof u.error == "string") return u.error;
       } catch {
       }
       return d.body;
@@ -170,218 +203,218 @@ function Q(r) {
   }
   return t.errorGeneric;
 }
-function ve(r) {
-  if (r && typeof r == "object" && "status" in r) {
-    const d = r.status;
+function ve(n) {
+  if (n && typeof n == "object" && "status" in n) {
+    const d = n.status;
     return typeof d == "number" ? d : null;
   }
   return null;
 }
-const we = (r) => ve(r) === 409;
+const we = (n) => ve(n) === 409;
 function Se({
-  project: r,
+  project: n,
   active: d,
-  onOpenRun: m
+  onOpenRun: u
 }) {
-  var S, w;
-  const f = G(), [p, k] = v(null), x = M({
-    queryKey: ["goals", r],
-    queryFn: () => f.get(`${R}/goals?project=${A(r)}`),
+  var y, k;
+  const g = O(), [m, N] = v(null), x = K({
+    queryKey: ["goals", n],
+    queryFn: () => g.get(`${C}/goals?project=${P(n)}`),
     refetchInterval: d ? 5e3 : !1
-  }), s = M({
-    queryKey: ["takt-tasks", r],
-    queryFn: () => f.get(`${R}/takt/tasks?project=${A(r)}`),
+  }), a = K({
+    queryKey: ["takt-tasks", n],
+    queryFn: () => g.get(`${C}/takt/tasks?project=${P(n)}`),
     refetchInterval: d ? 5e3 : !1
-  }), h = ((S = x.data) == null ? void 0 : S.goals) ?? [], l = /* @__PURE__ */ new Map();
-  for (const c of ((w = s.data) == null ? void 0 : w.tasks) ?? [])
-    c.name && l.set(c.name, c);
-  return /* @__PURE__ */ n("div", { className: "grid gap-4 grid-cols-[minmax(0,5fr)_minmax(0,7fr)]", children: [
-    /* @__PURE__ */ n(b, { children: [
-      /* @__PURE__ */ e(E, { children: t.tabGoals }),
-      x.error ? /* @__PURE__ */ e(F, { message: Q(x.error) }) : null,
-      h.length ? /* @__PURE__ */ n("table", { className: "w-full border-collapse table-striped", children: [
-        /* @__PURE__ */ e("thead", { children: /* @__PURE__ */ e("tr", { children: [t.objective, t.colStatus, t.goalBranch, t.tasks, t.questions, t.colCompleted].map((c) => /* @__PURE__ */ e("th", { className: "text-left text-muted text-[12px] uppercase tracking-[.04em] px-2.5 py-2 border-b border-border font-medium", children: c }, c)) }) }),
-        /* @__PURE__ */ e("tbody", { children: h.map((c) => /* @__PURE__ */ n(
+  }), p = ((y = x.data) == null ? void 0 : y.goals) ?? [], r = /* @__PURE__ */ new Map();
+  for (const o of ((k = a.data) == null ? void 0 : k.tasks) ?? [])
+    o.name && r.set(o.name, o);
+  return /* @__PURE__ */ s("div", { className: "grid gap-4 grid-cols-[minmax(0,5fr)_minmax(0,7fr)]", children: [
+    /* @__PURE__ */ s(S, { children: [
+      /* @__PURE__ */ e($, { children: t.tabGoals }),
+      x.error ? /* @__PURE__ */ e(R, { message: F(x.error) }) : null,
+      p.length ? /* @__PURE__ */ s("table", { className: "w-full border-collapse table-striped", children: [
+        /* @__PURE__ */ e("thead", { children: /* @__PURE__ */ e("tr", { children: [t.objective, t.colStatus, t.goalBranch, t.tasks, t.questions, t.colCompleted].map((o) => /* @__PURE__ */ e("th", { className: "text-left text-muted text-[12px] uppercase tracking-[.04em] px-2.5 py-2 border-b border-border font-medium", children: o }, o)) }) }),
+        /* @__PURE__ */ e("tbody", { children: p.map((o) => /* @__PURE__ */ s(
           "tr",
           {
-            onClick: () => k(c.id),
-            className: `cursor-pointer ${c.id === p ? "bg-accent/10" : "hover:bg-raised"}`,
+            onClick: () => N(o.id),
+            className: `cursor-pointer ${o.id === m ? "bg-accent/10" : "hover:bg-raised"}`,
             children: [
-              /* @__PURE__ */ e("td", { className: "px-2.5 py-2 text-sm", children: /* @__PURE__ */ e(V, { onClick: () => k(c.id), children: (c.objective || "").split(`
+              /* @__PURE__ */ e("td", { className: "px-2.5 py-2 text-sm", children: /* @__PURE__ */ e(X, { onClick: () => N(o.id), children: (o.objective || "").split(`
 `)[0] }) }),
-              /* @__PURE__ */ e("td", { className: "px-2.5 py-2", children: /* @__PURE__ */ e(L, { variant: J(c.status), children: ie(c.status) }) }),
-              /* @__PURE__ */ e("td", { className: "px-2.5 py-2 text-sm text-muted", children: c.branch ?? t.goalNone }),
-              /* @__PURE__ */ e("td", { className: "px-2.5 py-2 text-sm", children: c.taskCount }),
-              /* @__PURE__ */ e("td", { className: "px-2.5 py-2 text-sm", children: c.pendingQuestions }),
-              /* @__PURE__ */ e("td", { className: "px-2.5 py-2 text-sm text-muted", children: oe(c.updatedAt) })
+              /* @__PURE__ */ e("td", { className: "px-2.5 py-2", children: /* @__PURE__ */ e(M, { variant: V(o.status), children: ce(o.status) }) }),
+              /* @__PURE__ */ e("td", { className: "px-2.5 py-2 text-sm text-muted", children: o.branch ?? t.goalNone }),
+              /* @__PURE__ */ e("td", { className: "px-2.5 py-2 text-sm", children: o.taskCount }),
+              /* @__PURE__ */ e("td", { className: "px-2.5 py-2 text-sm", children: o.pendingQuestions }),
+              /* @__PURE__ */ e("td", { className: "px-2.5 py-2 text-sm text-muted", children: ie(o.updatedAt) })
             ]
           },
-          c.id
+          o.id
         )) })
-      ] }) : /* @__PURE__ */ e(H, { icon: "🎯", title: t.goalListEmpty, subtitle: t.goalListEmptyHint })
+      ] }) : /* @__PURE__ */ e(G, { icon: "🎯", title: t.goalListEmpty, subtitle: t.goalListEmptyHint })
     ] }),
-    /* @__PURE__ */ e("div", { className: "min-h-0", children: p ? /* @__PURE__ */ e(
-      Ce,
+    /* @__PURE__ */ e("div", { className: "min-h-0", children: m ? /* @__PURE__ */ e(
+      Te,
       {
-        id: p,
+        id: m,
         active: d,
-        taktByName: l,
-        onOpenRun: m
+        taktByName: r,
+        onOpenRun: u
       }
-    ) : /* @__PURE__ */ e(b, { children: /* @__PURE__ */ e(H, { icon: "🎯", title: t.goalSelectHint }) }) })
+    ) : /* @__PURE__ */ e(S, { children: /* @__PURE__ */ e(G, { icon: "🎯", title: t.goalSelectHint }) }) })
   ] });
 }
-function Ce({
-  id: r,
+function Te({
+  id: n,
   active: d,
-  taktByName: m,
-  onOpenRun: f
+  taktByName: u,
+  onOpenRun: g
 }) {
-  var u, _, X, te, re, ne, ae;
-  const p = G(), k = ce(), [x, s] = v(null), [h, l] = v(null), [S, w] = v(""), [c, T] = v(null), [j, g] = v(""), $ = M({
-    queryKey: ["goal", r],
-    queryFn: () => p.get(`${R}/goal?id=${A(r)}`),
+  var h, H, Y, ne, re, se, ae;
+  const m = O(), N = te(), [x, a] = v(null), [p, r] = v(null), [y, k] = v(""), [o, j] = v(null), [A, f] = v(""), q = K({
+    queryKey: ["goal", n],
+    queryFn: () => m.get(`${C}/goal?id=${P(n)}`),
     refetchInterval: d ? 5e3 : !1
-  }), i = $.data, P = () => {
-    k.invalidateQueries({ queryKey: ["goal", r] }), k.invalidateQueries({ queryKey: ["goals"] });
-  }, o = (a) => {
-    we(a) ? (s(t.conflictReloaded), P()) : s(Q(a));
-  }, y = Y({
-    mutationFn: (a) => p.post(`${R}/goal/status`, {
-      id: r,
-      status: a.status,
-      reason: a.reason,
-      expectedRevision: a.revision
+  }), c = q.data, L = () => {
+    N.invalidateQueries({ queryKey: ["goal", n] }), N.invalidateQueries({ queryKey: ["goals"] });
+  }, i = (l) => {
+    we(l) ? (a(t.conflictReloaded), L()) : a(F(l));
+  }, w = J({
+    mutationFn: (l) => m.post(`${C}/goal/status`, {
+      id: n,
+      status: l.status,
+      reason: l.reason,
+      expectedRevision: l.revision
     }),
     onSuccess: () => {
-      l(null), w(""), s(null), P();
+      r(null), k(""), a(null), L();
     },
-    onError: o
-  }), B = Y({
-    mutationFn: (a) => p.post(`${R}/goal/answer`, {
-      id: r,
-      questionId: a.questionId,
-      answer: a.answer,
-      expectedRevision: a.revision
+    onError: i
+  }), _ = J({
+    mutationFn: (l) => m.post(`${C}/goal/answer`, {
+      id: n,
+      questionId: l.questionId,
+      answer: l.answer,
+      expectedRevision: l.revision
     }),
     onSuccess: () => {
-      T(null), g(""), s(null), P();
+      j(null), f(""), a(null), L();
     },
-    onError: o
+    onError: i
   });
-  if ($.isPending && !i) return /* @__PURE__ */ e(b, { children: /* @__PURE__ */ e("p", { className: "text-sm text-muted", children: t.loading }) });
-  if (!i)
-    return /* @__PURE__ */ e(b, { children: $.error ? /* @__PURE__ */ e(F, { message: Q($.error) }) : null });
-  const K = (i.questions ?? []).filter((a) => a.status === "pending"), I = [...i.workLog ?? []].reverse().slice(0, 50), D = i.status === "active" ? "paused" : i.status === "paused" ? "active" : null, z = (a, N) => {
-    const O = j.trim();
-    O && B.mutate({ questionId: a, answer: O, revision: i.revision });
+  if (q.isPending && !c) return /* @__PURE__ */ e(S, { children: /* @__PURE__ */ e("p", { className: "text-sm text-muted", children: t.loading }) });
+  if (!c)
+    return /* @__PURE__ */ e(S, { children: q.error ? /* @__PURE__ */ e(R, { message: F(q.error) }) : null });
+  const B = (c.questions ?? []).filter((l) => l.status === "pending"), I = [...c.workLog ?? []].reverse().slice(0, 50), D = c.status === "active" ? "paused" : c.status === "paused" ? "active" : null, U = (l, b) => {
+    const Q = A.trim();
+    Q && _.mutate({ questionId: l, answer: Q, revision: c.revision });
   };
-  return /* @__PURE__ */ n("div", { className: "flex flex-col gap-4", children: [
-    x ? /* @__PURE__ */ e(F, { message: x, onDismiss: () => s(null) }) : null,
-    /* @__PURE__ */ n(b, { children: [
-      /* @__PURE__ */ n("div", { className: "flex items-start justify-between gap-3", children: [
-        /* @__PURE__ */ n("div", { className: "min-w-0", children: [
-          /* @__PURE__ */ e(E, { children: t.objective }),
-          /* @__PURE__ */ e("p", { className: "text-sm whitespace-pre-wrap", children: i.objective })
+  return /* @__PURE__ */ s("div", { className: "flex flex-col gap-4", children: [
+    x ? /* @__PURE__ */ e(R, { message: x, onDismiss: () => a(null) }) : null,
+    /* @__PURE__ */ s(S, { children: [
+      /* @__PURE__ */ s("div", { className: "flex items-start justify-between gap-3", children: [
+        /* @__PURE__ */ s("div", { className: "min-w-0", children: [
+          /* @__PURE__ */ e($, { children: t.objective }),
+          /* @__PURE__ */ e("p", { className: "text-sm whitespace-pre-wrap", children: c.objective })
         ] }),
-        /* @__PURE__ */ n("div", { className: "flex items-center gap-2 shrink-0", children: [
-          /* @__PURE__ */ e(L, { variant: J(i.status), children: ie(i.status) }),
-          D ? /* @__PURE__ */ e(C, { onClick: () => {
-            w(""), l(D);
+        /* @__PURE__ */ s("div", { className: "flex items-center gap-2 shrink-0", children: [
+          /* @__PURE__ */ e(M, { variant: V(c.status), children: ce(c.status) }),
+          D ? /* @__PURE__ */ e(T, { onClick: () => {
+            k(""), r(D);
           }, children: D === "paused" ? t.pause : t.resume }) : null
         ] })
       ] }),
-      /* @__PURE__ */ n("dl", { className: "mt-3 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm", children: [
+      /* @__PURE__ */ s("dl", { className: "mt-3 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm", children: [
         /* @__PURE__ */ e("dt", { className: "text-muted", children: t.goalBranch }),
-        /* @__PURE__ */ e("dd", { className: "font-mono text-[13px]", children: i.branch ?? t.goalNone }),
+        /* @__PURE__ */ e("dd", { className: "font-mono text-[13px]", children: c.branch ?? t.goalNone }),
         /* @__PURE__ */ e("dt", { className: "text-muted", children: "revision" }),
-        /* @__PURE__ */ e("dd", { children: i.revision })
+        /* @__PURE__ */ e("dd", { children: c.revision })
       ] })
     ] }),
-    (u = i.outOfScope) != null && u.length || (_ = i.acceptanceCriteria) != null && _.length || (X = i.constraints) != null && X.length ? /* @__PURE__ */ n(b, { children: [
-      /* @__PURE__ */ n(E, { children: [
+    (h = c.outOfScope) != null && h.length || (H = c.acceptanceCriteria) != null && H.length || (Y = c.constraints) != null && Y.length ? /* @__PURE__ */ s(S, { children: [
+      /* @__PURE__ */ s($, { children: [
         t.acceptance,
         " / ",
         t.outOfScope,
         " / ",
         t.constraints
       ] }),
-      (te = i.acceptanceCriteria) != null && te.length ? /* @__PURE__ */ n(q, { children: [
+      (ne = c.acceptanceCriteria) != null && ne.length ? /* @__PURE__ */ s(E, { children: [
         /* @__PURE__ */ e("h4", { className: "text-sm font-medium mt-1", children: t.acceptance }),
-        /* @__PURE__ */ e("ul", { className: "list-disc pl-5 text-sm", children: i.acceptanceCriteria.map((a, N) => /* @__PURE__ */ e("li", { children: a }, N)) })
+        /* @__PURE__ */ e("ul", { className: "list-disc pl-5 text-sm", children: c.acceptanceCriteria.map((l, b) => /* @__PURE__ */ e("li", { children: l }, b)) })
       ] }) : null,
-      (re = i.outOfScope) != null && re.length ? /* @__PURE__ */ n(q, { children: [
+      (re = c.outOfScope) != null && re.length ? /* @__PURE__ */ s(E, { children: [
         /* @__PURE__ */ e("h4", { className: "text-sm font-medium mt-2", children: t.outOfScope }),
-        /* @__PURE__ */ e("ul", { className: "list-disc pl-5 text-sm", children: i.outOfScope.map((a, N) => /* @__PURE__ */ e("li", { children: a }, N)) })
+        /* @__PURE__ */ e("ul", { className: "list-disc pl-5 text-sm", children: c.outOfScope.map((l, b) => /* @__PURE__ */ e("li", { children: l }, b)) })
       ] }) : null,
-      (ne = i.constraints) != null && ne.length ? /* @__PURE__ */ n(q, { children: [
+      (se = c.constraints) != null && se.length ? /* @__PURE__ */ s(E, { children: [
         /* @__PURE__ */ e("h4", { className: "text-sm font-medium mt-2", children: t.constraints }),
-        /* @__PURE__ */ e("ul", { className: "list-disc pl-5 text-sm", children: i.constraints.map((a, N) => /* @__PURE__ */ e("li", { children: a }, N)) })
+        /* @__PURE__ */ e("ul", { className: "list-disc pl-5 text-sm", children: c.constraints.map((l, b) => /* @__PURE__ */ e("li", { children: l }, b)) })
       ] }) : null
     ] }) : null,
-    /* @__PURE__ */ n(b, { children: [
-      /* @__PURE__ */ e(E, { children: t.tasks }),
-      (ae = i.tasks) != null && ae.length ? /* @__PURE__ */ n("table", { className: "w-full border-collapse table-striped", children: [
-        /* @__PURE__ */ e("thead", { children: /* @__PURE__ */ e("tr", { children: [t.taskName, t.taskState, t.taskBranch, t.taskIntegrated, t.taktStatus].map((a) => /* @__PURE__ */ e("th", { className: "text-left text-muted text-[12px] uppercase tracking-[.04em] px-2.5 py-2 border-b border-border font-medium", children: a }, a)) }) }),
-        /* @__PURE__ */ e("tbody", { children: i.tasks.map((a) => {
-          const N = a.taskName ? m.get(a.taskName) : void 0;
-          return /* @__PURE__ */ n("tr", { children: [
-            /* @__PURE__ */ e("td", { className: "px-2.5 py-2 text-sm", children: a.taskName }),
-            /* @__PURE__ */ e("td", { className: "px-2.5 py-2 text-sm", children: a.state }),
-            /* @__PURE__ */ e("td", { className: "px-2.5 py-2 text-sm font-mono text-[13px]", children: a.branch ?? "—" }),
-            /* @__PURE__ */ e("td", { className: "px-2.5 py-2 text-sm font-mono text-[13px]", children: ke(a.integratedSha) }),
-            /* @__PURE__ */ e("td", { className: "px-2.5 py-2 text-sm", children: N ? /* @__PURE__ */ e(V, { onClick: () => N.runSlug && f(N.runSlug), children: /* @__PURE__ */ e(L, { variant: J(N.status), children: N.status }) }) : "—" })
-          ] }, a.taskName);
+    /* @__PURE__ */ s(S, { children: [
+      /* @__PURE__ */ e($, { children: t.tasks }),
+      (ae = c.tasks) != null && ae.length ? /* @__PURE__ */ s("table", { className: "w-full border-collapse table-striped", children: [
+        /* @__PURE__ */ e("thead", { children: /* @__PURE__ */ e("tr", { children: [t.taskName, t.taskState, t.taskBranch, t.taskIntegrated, t.taktStatus].map((l) => /* @__PURE__ */ e("th", { className: "text-left text-muted text-[12px] uppercase tracking-[.04em] px-2.5 py-2 border-b border-border font-medium", children: l }, l)) }) }),
+        /* @__PURE__ */ e("tbody", { children: c.tasks.map((l) => {
+          const b = l.taskName ? u.get(l.taskName) : void 0;
+          return /* @__PURE__ */ s("tr", { children: [
+            /* @__PURE__ */ e("td", { className: "px-2.5 py-2 text-sm", children: l.taskName }),
+            /* @__PURE__ */ e("td", { className: "px-2.5 py-2 text-sm", children: l.state }),
+            /* @__PURE__ */ e("td", { className: "px-2.5 py-2 text-sm font-mono text-[13px]", children: l.branch ?? "—" }),
+            /* @__PURE__ */ e("td", { className: "px-2.5 py-2 text-sm font-mono text-[13px]", children: ke(l.integratedSha) }),
+            /* @__PURE__ */ e("td", { className: "px-2.5 py-2 text-sm", children: b ? /* @__PURE__ */ e(X, { onClick: () => b.runSlug && g(b.runSlug), children: /* @__PURE__ */ e(M, { variant: V(b.status), children: b.status }) }) : "—" })
+          ] }, l.taskName);
         }) })
       ] }) : /* @__PURE__ */ e("p", { className: "text-sm text-muted", children: t.goalListEmptyHint })
     ] }),
-    /* @__PURE__ */ n(b, { children: [
-      /* @__PURE__ */ e(E, { children: t.questions }),
-      K.length ? /* @__PURE__ */ e("div", { className: "flex flex-col gap-3", children: K.map((a) => {
-        var N;
-        return /* @__PURE__ */ n("div", { className: "border border-border rounded p-3", children: [
-          /* @__PURE__ */ e("p", { className: "text-sm whitespace-pre-wrap", children: a.body }),
-          /* @__PURE__ */ e("div", { className: "mt-2 flex gap-2 items-center flex-wrap", children: (N = a.options) != null && N.length ? a.options.map((O) => /* @__PURE__ */ e(C, { onClick: () => {
-            T(a.id), g(O);
-          }, children: O }, O)) : /* @__PURE__ */ n(q, { children: [
+    /* @__PURE__ */ s(S, { children: [
+      /* @__PURE__ */ e($, { children: t.questions }),
+      B.length ? /* @__PURE__ */ e("div", { className: "flex flex-col gap-3", children: B.map((l) => {
+        var b;
+        return /* @__PURE__ */ s("div", { className: "border border-border rounded p-3", children: [
+          /* @__PURE__ */ e("p", { className: "text-sm whitespace-pre-wrap", children: l.body }),
+          /* @__PURE__ */ e("div", { className: "mt-2 flex gap-2 items-center flex-wrap", children: (b = l.options) != null && b.length ? l.options.map((Q) => /* @__PURE__ */ e(T, { onClick: () => {
+            j(l.id), f(Q);
+          }, children: Q }, Q)) : /* @__PURE__ */ s(E, { children: [
             /* @__PURE__ */ e(
               Z,
               {
-                value: c === a.id ? j : "",
-                onChange: (O) => {
-                  T(a.id), g(O.target.value);
+                value: o === l.id ? A : "",
+                onChange: (Q) => {
+                  j(l.id), f(Q.target.value);
                 },
                 placeholder: t.questionAnswerPlaceholder,
                 className: "flex-1 min-w-[160px]"
               }
             ),
-            /* @__PURE__ */ e(C, { primary: !0, onClick: () => z(a.id), children: t.submit })
+            /* @__PURE__ */ e(T, { primary: !0, onClick: () => U(l.id), children: t.submit })
           ] }) })
-        ] }, a.id);
+        ] }, l.id);
       }) }) : /* @__PURE__ */ e("p", { className: "text-sm text-muted", children: t.noQuestions })
     ] }),
-    /* @__PURE__ */ n(b, { children: [
-      /* @__PURE__ */ e(E, { children: t.workLog }),
-      I.length ? /* @__PURE__ */ e("ul", { className: "flex flex-col gap-1 text-sm", children: I.map((a) => /* @__PURE__ */ n("li", { className: "flex gap-2", children: [
-        /* @__PURE__ */ e("span", { className: "text-muted shrink-0", children: oe(a.at) }),
-        /* @__PURE__ */ e(L, { variant: "muted", children: a.kind }),
-        /* @__PURE__ */ e("span", { className: "min-w-0", children: a.summary })
-      ] }, a.id)) }) : /* @__PURE__ */ e("p", { className: "text-sm text-muted", children: "—" })
+    /* @__PURE__ */ s(S, { children: [
+      /* @__PURE__ */ e($, { children: t.workLog }),
+      I.length ? /* @__PURE__ */ e("ul", { className: "flex flex-col gap-1 text-sm", children: I.map((l) => /* @__PURE__ */ s("li", { className: "flex gap-2", children: [
+        /* @__PURE__ */ e("span", { className: "text-muted shrink-0", children: ie(l.at) }),
+        /* @__PURE__ */ e(M, { variant: "muted", children: l.kind }),
+        /* @__PURE__ */ e("span", { className: "min-w-0", children: l.summary })
+      ] }, l.id)) }) : /* @__PURE__ */ e("p", { className: "text-sm text-muted", children: "—" })
     ] }),
-    /* @__PURE__ */ n(
+    /* @__PURE__ */ s(
       W,
       {
-        open: h !== null,
-        onClose: () => l(null),
-        title: h === "paused" ? t.pauseTitle : t.resumeTitle,
-        footer: /* @__PURE__ */ n(q, { children: [
-          /* @__PURE__ */ e(C, { onClick: () => l(null), children: t.cancel }),
+        open: p !== null,
+        onClose: () => r(null),
+        title: p === "paused" ? t.pauseTitle : t.resumeTitle,
+        footer: /* @__PURE__ */ s(E, { children: [
+          /* @__PURE__ */ e(T, { onClick: () => r(null), children: t.cancel }),
           /* @__PURE__ */ e(
-            C,
+            T,
             {
               primary: !0,
-              disabled: !S.trim() || y.isPending,
-              onClick: () => h && y.mutate({ status: h, reason: S.trim(), revision: i.revision }),
+              disabled: !y.trim() || w.isPending,
+              onClick: () => p && w.mutate({ status: p, reason: y.trim(), revision: c.revision }),
               children: t.confirm
             }
           )
@@ -391,8 +424,8 @@ function Ce({
           /* @__PURE__ */ e(
             Z,
             {
-              value: S,
-              onChange: (a) => w(a.target.value),
+              value: y,
+              onChange: (l) => k(l.target.value),
               placeholder: t.reasonPlaceholder,
               className: "w-full mt-1"
             }
@@ -403,234 +436,298 @@ function Ce({
     /* @__PURE__ */ e(
       W,
       {
-        open: c !== null && K.some((a) => {
-          var N;
-          return a.id === c && ((N = a.options) == null ? void 0 : N.length);
+        open: o !== null && B.some((l) => {
+          var b;
+          return l.id === o && ((b = l.options) == null ? void 0 : b.length);
         }),
-        onClose: () => T(null),
+        onClose: () => j(null),
         title: t.questions,
-        footer: /* @__PURE__ */ n(q, { children: [
-          /* @__PURE__ */ e(C, { onClick: () => T(null), children: t.cancel }),
-          /* @__PURE__ */ e(C, { primary: !0, onClick: () => c && z(c), children: t.submit })
+        footer: /* @__PURE__ */ s(E, { children: [
+          /* @__PURE__ */ e(T, { onClick: () => j(null), children: t.cancel }),
+          /* @__PURE__ */ e(T, { primary: !0, onClick: () => o && U(o), children: t.submit })
         ] }),
-        children: /* @__PURE__ */ e("p", { className: "text-sm whitespace-pre-wrap", children: c ? t.answerConfirm(j) : "" })
+        children: /* @__PURE__ */ e("p", { className: "text-sm whitespace-pre-wrap", children: o ? t.answerConfirm(A) : "" })
       }
     )
   ] });
 }
-function Te({
-  project: r,
+function Ce({
+  project: n,
   slug: d,
-  active: m
+  active: u
 }) {
-  var $, i, P;
-  const f = G(), [p, k] = v(null), x = M({
-    queryKey: ["takt-run", r, d],
-    queryFn: () => f.get(
-      `${R}/takt/run?project=${A(r)}&slug=${A(d)}`
+  var q, c, L;
+  const g = O(), [m, N] = v(null), x = K({
+    queryKey: ["takt-run", n, d],
+    queryFn: () => g.get(
+      `${C}/takt/run?project=${P(n)}&slug=${P(d)}`
     ),
-    refetchInterval: m ? 3e3 : !1
-  }), s = x.data, h = (($ = s == null ? void 0 : s.meta) == null ? void 0 : $.status) === "running", l = Ne({ offset: 0, file: "", records: [] }), [S, w] = v(0);
+    refetchInterval: u ? 3e3 : !1
+  }), a = x.data, p = ((q = a == null ? void 0 : a.meta) == null ? void 0 : q.status) === "running", r = Ne({ offset: 0, file: "", records: [] }), [y, k] = v(0);
   ee(() => {
-    l.current = { offset: 0, file: "", records: [] }, w((o) => o + 1);
-  }, [r, d]);
-  const c = M({
-    queryKey: ["takt-run-log", r, d],
-    queryFn: () => f.get(
-      `${R}/takt/run/log?project=${A(r)}&slug=${A(d)}&offset=${l.current.offset}`
+    r.current = { offset: 0, file: "", records: [] }, k((i) => i + 1);
+  }, [n, d]);
+  const o = K({
+    queryKey: ["takt-run-log", n, d],
+    queryFn: () => g.get(
+      `${C}/takt/run/log?project=${P(n)}&slug=${P(d)}&offset=${r.current.offset}`
     ),
-    refetchInterval: m && h ? 2e3 : !1,
+    refetchInterval: u && p ? 2e3 : !1,
     retry: 0
   });
   ee(() => {
-    const o = c.data;
-    if (!o) return;
-    const y = l.current;
-    (o.reset || y.file && y.file !== o.file) && (y.records = []), y.file = o.file, o.records.length && (y.records = y.records.concat(o.records).slice(-2e3), w((B) => B + 1)), y.offset = o.nextOffset;
-  }, [c.data]);
-  const T = l.current.records, j = M({
-    queryKey: ["takt-report", r, d, p],
-    queryFn: () => f.get(
-      `${R}/takt/run/report?project=${A(r)}&slug=${A(d)}&name=${A(p ?? "")}`
+    const i = o.data;
+    if (!i) return;
+    const w = r.current;
+    (i.reset || w.file && w.file !== i.file) && (w.records = []), w.file = i.file, i.records.length && (w.records = w.records.concat(i.records).slice(-2e3), k((_) => _ + 1)), w.offset = i.nextOffset;
+  }, [o.data]);
+  const j = r.current.records, A = K({
+    queryKey: ["takt-report", n, d, m],
+    queryFn: () => g.get(
+      `${C}/takt/run/report?project=${P(n)}&slug=${P(d)}&name=${P(m ?? "")}`
     ),
-    enabled: p !== null
-  }), g = s == null ? void 0 : s.meta;
-  return /* @__PURE__ */ n("div", { className: "flex flex-col gap-4", children: [
-    x.error ? /* @__PURE__ */ e(F, { message: Q(x.error) }) : null,
-    s != null && s.error ? /* @__PURE__ */ e(F, { message: s.error + (s.retryable ? `（${t.retrying}）` : "") }) : null,
-    /* @__PURE__ */ n(b, { children: [
-      /* @__PURE__ */ e(E, { children: t.runMeta }),
-      /* @__PURE__ */ n("dl", { className: "grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm", children: [
+    enabled: m !== null
+  }), f = a == null ? void 0 : a.meta;
+  return /* @__PURE__ */ s("div", { className: "flex flex-col gap-4", children: [
+    x.error ? /* @__PURE__ */ e(R, { message: F(x.error) }) : null,
+    a != null && a.error ? /* @__PURE__ */ e(R, { message: a.error + (a.retryable ? `（${t.retrying}）` : "") }) : null,
+    /* @__PURE__ */ s(S, { children: [
+      /* @__PURE__ */ e($, { children: t.runMeta }),
+      /* @__PURE__ */ s("dl", { className: "grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm", children: [
         /* @__PURE__ */ e("dt", { className: "text-muted", children: "slug" }),
         /* @__PURE__ */ e("dd", { className: "font-mono text-[13px]", children: d }),
         /* @__PURE__ */ e("dt", { className: "text-muted", children: t.colStatus }),
-        /* @__PURE__ */ e("dd", { children: g ? /* @__PURE__ */ e(L, { variant: J(g.status), children: g.status }) : "—" }),
+        /* @__PURE__ */ e("dd", { children: f ? /* @__PURE__ */ e(M, { variant: V(f.status), children: f.status }) : "—" }),
         /* @__PURE__ */ e("dt", { className: "text-muted", children: t.runCurrentStep }),
-        /* @__PURE__ */ e("dd", { children: (g == null ? void 0 : g.currentStep) ?? "—" }),
+        /* @__PURE__ */ e("dd", { children: (f == null ? void 0 : f.currentStep) ?? "—" }),
         /* @__PURE__ */ e("dt", { className: "text-muted", children: t.runIteration }),
-        /* @__PURE__ */ e("dd", { children: (g == null ? void 0 : g.currentIteration) ?? "—" }),
+        /* @__PURE__ */ e("dd", { children: (f == null ? void 0 : f.currentIteration) ?? "—" }),
         /* @__PURE__ */ e("dt", { className: "text-muted", children: t.runPhase }),
-        /* @__PURE__ */ e("dd", { children: (g == null ? void 0 : g.phase) ?? "—" }),
+        /* @__PURE__ */ e("dd", { children: (f == null ? void 0 : f.phase) ?? "—" }),
         /* @__PURE__ */ e("dt", { className: "text-muted", children: t.colStarted }),
-        /* @__PURE__ */ e("dd", { children: U(g == null ? void 0 : g.startTime) }),
+        /* @__PURE__ */ e("dd", { children: z(f == null ? void 0 : f.startTime) }),
         /* @__PURE__ */ e("dt", { className: "text-muted", children: t.colCompleted }),
-        /* @__PURE__ */ e("dd", { children: U(g == null ? void 0 : g.endTime) })
+        /* @__PURE__ */ e("dd", { children: z(f == null ? void 0 : f.endTime) })
       ] })
     ] }),
-    /* @__PURE__ */ n(b, { children: [
-      /* @__PURE__ */ e(E, { children: t.runSteps }),
-      (i = s == null ? void 0 : s.steps) != null && i.length ? /* @__PURE__ */ e("ol", { className: "flex flex-col gap-1 text-sm", children: s.steps.map((o, y) => /* @__PURE__ */ n("li", { className: "flex gap-2 items-baseline flex-wrap", children: [
-        /* @__PURE__ */ e(L, { variant: o.type === "workflow_abort" ? "err" : o.type === "workflow_complete" ? "ok" : "muted", children: o.type }),
-        /* @__PURE__ */ e("span", { className: "font-mono text-[13px]", children: o.step ?? "—" }),
-        o.status ? /* @__PURE__ */ e("span", { children: o.status }) : null,
-        o.iteration != null ? /* @__PURE__ */ n("span", { className: "text-muted", children: [
+    /* @__PURE__ */ s(S, { children: [
+      /* @__PURE__ */ e($, { children: t.runSteps }),
+      (c = a == null ? void 0 : a.steps) != null && c.length ? /* @__PURE__ */ e("ol", { className: "flex flex-col gap-1 text-sm", children: a.steps.map((i, w) => /* @__PURE__ */ s("li", { className: "flex gap-2 items-baseline flex-wrap", children: [
+        /* @__PURE__ */ e(M, { variant: i.type === "workflow_abort" ? "err" : i.type === "workflow_complete" ? "ok" : "muted", children: i.type }),
+        /* @__PURE__ */ e("span", { className: "font-mono text-[13px]", children: i.step ?? "—" }),
+        i.status ? /* @__PURE__ */ e("span", { children: i.status }) : null,
+        i.iteration != null ? /* @__PURE__ */ s("span", { className: "text-muted", children: [
           "iter ",
-          o.iteration
+          i.iteration
         ] }) : null,
-        o.matchedRule != null ? /* @__PURE__ */ n("span", { className: "text-muted", children: [
+        i.matchedRule != null ? /* @__PURE__ */ s("span", { className: "text-muted", children: [
           "rule ",
-          String(o.matchedRule)
+          String(i.matchedRule)
         ] }) : null,
-        o.reason ? /* @__PURE__ */ e("span", { className: "text-danger", children: o.reason }) : null,
-        /* @__PURE__ */ e("span", { className: "text-muted", children: U(o.at) })
-      ] }, y)) }) : /* @__PURE__ */ e("p", { className: "text-sm text-muted", children: t.noSteps })
+        i.reason ? /* @__PURE__ */ e("span", { className: "text-danger", children: i.reason }) : null,
+        /* @__PURE__ */ e("span", { className: "text-muted", children: z(i.at) })
+      ] }, w)) }) : /* @__PURE__ */ e("p", { className: "text-sm text-muted", children: t.noSteps })
     ] }),
-    /* @__PURE__ */ n(b, { children: [
-      /* @__PURE__ */ e(E, { children: t.runLog }),
-      /* @__PURE__ */ n("div", { className: "font-mono text-[12px] whitespace-pre-wrap break-all max-h-[420px] overflow-y-auto border border-border rounded p-2", children: [
-        c.error ? /* @__PURE__ */ e(F, { message: Q(c.error) }) : null,
-        T.length ? T.map((o, y) => /* @__PURE__ */ e(je, { rec: o }, y)) : /* @__PURE__ */ e("span", { className: "text-muted", children: t.loading })
+    /* @__PURE__ */ s(S, { children: [
+      /* @__PURE__ */ e($, { children: t.runLog }),
+      /* @__PURE__ */ s("div", { className: "font-mono text-[12px] whitespace-pre-wrap break-all max-h-[420px] overflow-y-auto border border-border rounded p-2", children: [
+        o.error ? /* @__PURE__ */ e(R, { message: F(o.error) }) : null,
+        j.length ? j.map((i, w) => /* @__PURE__ */ e(Re, { rec: i }, w)) : /* @__PURE__ */ e("span", { className: "text-muted", children: t.loading })
       ] }),
-      c.data ? /* @__PURE__ */ n("p", { className: "text-[12px] text-muted mt-1", children: [
-        c.data.file,
+      o.data ? /* @__PURE__ */ s("p", { className: "text-[12px] text-muted mt-1", children: [
+        o.data.file,
         " — ",
-        se(c.data.size),
+        le(o.data.size),
         " B"
       ] }) : null
     ] }),
-    /* @__PURE__ */ n(b, { children: [
-      /* @__PURE__ */ e(E, { children: t.runReports }),
-      (P = s == null ? void 0 : s.reports) != null && P.length ? /* @__PURE__ */ e("ul", { className: "flex flex-col gap-1 text-sm", children: s.reports.map((o) => /* @__PURE__ */ n("li", { children: [
-        /* @__PURE__ */ e(V, { onClick: () => k(o.name), className: "text-accent underline", children: o.name }),
-        /* @__PURE__ */ n("span", { className: "text-muted", children: [
+    /* @__PURE__ */ s(S, { children: [
+      /* @__PURE__ */ e($, { children: t.runReports }),
+      (L = a == null ? void 0 : a.reports) != null && L.length ? /* @__PURE__ */ e("ul", { className: "flex flex-col gap-1 text-sm", children: a.reports.map((i) => /* @__PURE__ */ s("li", { children: [
+        /* @__PURE__ */ e(X, { onClick: () => N(i.name), className: "text-accent underline", children: i.name }),
+        /* @__PURE__ */ s("span", { className: "text-muted", children: [
           "（",
-          se(o.size),
+          le(i.size),
           " B）"
         ] })
-      ] }, o.name)) }) : /* @__PURE__ */ e("p", { className: "text-sm text-muted", children: t.noReports })
+      ] }, i.name)) }) : /* @__PURE__ */ e("p", { className: "text-sm text-muted", children: t.noReports })
     ] }),
-    /* @__PURE__ */ n(
+    /* @__PURE__ */ s(
       W,
       {
-        open: p !== null,
-        onClose: () => k(null),
-        title: p,
+        open: m !== null,
+        onClose: () => N(null),
+        title: m,
         maxWidth: 880,
         children: [
-          j.error ? /* @__PURE__ */ e(F, { message: Q(j.error) }) : null,
-          j.data ? /* @__PURE__ */ n(q, { children: [
-            /* @__PURE__ */ e(ue, { content: j.data.text }),
-            j.data.truncated ? /* @__PURE__ */ e("p", { className: "text-[12px] text-muted mt-2", children: t.truncatedReport }) : null
+          A.error ? /* @__PURE__ */ e(R, { message: F(A.error) }) : null,
+          A.data ? /* @__PURE__ */ s(E, { children: [
+            /* @__PURE__ */ e(ue, { content: A.data.text }),
+            A.data.truncated ? /* @__PURE__ */ e("p", { className: "text-[12px] text-muted mt-2", children: t.truncatedReport }) : null
           ] }) : /* @__PURE__ */ e("p", { className: "text-sm text-muted", children: t.loading })
         ]
       }
     )
   ] });
 }
-function je({ rec: r }) {
+function Re({ rec: n }) {
   const d = ye(() => {
-    if (typeof r.raw == "string") return r.raw;
-    const m = r.type ?? r.event ?? "", f = r.step ? ` ${String(r.step)}` : "", p = typeof r.content == "string" ? r.content : typeof r.reason == "string" ? r.reason : typeof r.error == "string" ? r.error : JSON.stringify(r);
-    return `${String(m)}${f} ${p}`.trim();
-  }, [r]);
+    if (typeof n.raw == "string") return n.raw;
+    const u = n.type ?? n.event ?? "", g = n.step ? ` ${String(n.step)}` : "", m = typeof n.content == "string" ? n.content : typeof n.reason == "string" ? n.reason : typeof n.error == "string" ? n.error : JSON.stringify(n);
+    return `${String(u)}${g} ${m}`.trim();
+  }, [n]);
   return /* @__PURE__ */ e("div", { children: d });
 }
-const Re = ["pending", "running", "completed", "failed", "exceeded", "pr_failed"], $e = /* @__PURE__ */ new Set(["failed", "exceeded", "pr_failed"]);
-function Ae({
-  project: r,
+const je = ["pending", "running", "completed", "failed", "exceeded", "pr_failed"], Ae = /* @__PURE__ */ new Set(["failed", "exceeded", "pr_failed"]);
+function $e({
+  project: n,
   hasTakt: d,
-  active: m,
-  runSlug: f,
-  onSelectRun: p
+  active: u,
+  runSlug: g,
+  onSelectRun: m
 }) {
-  const k = G(), x = M({
-    queryKey: ["takt-tasks", r],
-    queryFn: () => k.get(`${R}/takt/tasks?project=${A(r)}`),
-    refetchInterval: m ? 5e3 : !1
-  }), s = x.data, h = (s == null ? void 0 : s.tasks) ?? [];
-  return !d && s && !s.hasTakt ? /* @__PURE__ */ e(H, { icon: "🗂", title: t.taktEmptyNoDir, subtitle: t.taktEmptyNoDirHint }) : /* @__PURE__ */ n("div", { className: "flex flex-col gap-4", children: [
-    x.error ? /* @__PURE__ */ e(F, { message: Q(x.error) }) : null,
-    s != null && s.error ? /* @__PURE__ */ e(F, { message: s.error + (s.retryable ? `（${t.retrying}）` : "") }) : null,
-    /* @__PURE__ */ e("div", { className: "grid gap-3.5 grid-cols-[repeat(auto-fit,minmax(150px,1fr))]", children: Re.map((l) => {
-      var S;
+  const N = O(), x = K({
+    queryKey: ["takt-tasks", n],
+    queryFn: () => N.get(`${C}/takt/tasks?project=${P(n)}`),
+    refetchInterval: u ? 5e3 : !1
+  }), a = x.data, p = (a == null ? void 0 : a.tasks) ?? [];
+  return !d && a && !a.hasTakt ? /* @__PURE__ */ e(G, { icon: "🗂", title: t.taktEmptyNoDir, subtitle: t.taktEmptyNoDirHint }) : /* @__PURE__ */ s("div", { className: "flex flex-col gap-4", children: [
+    x.error ? /* @__PURE__ */ e(R, { message: F(x.error) }) : null,
+    a != null && a.error ? /* @__PURE__ */ e(R, { message: a.error + (a.retryable ? `（${t.retrying}）` : "") }) : null,
+    /* @__PURE__ */ e("div", { className: "grid gap-3.5 grid-cols-[repeat(auto-fit,minmax(150px,1fr))]", children: je.map((r) => {
+      var y;
       return /* @__PURE__ */ e(
         me,
         {
-          label: l,
-          value: ((S = s == null ? void 0 : s.counts) == null ? void 0 : S[l]) ?? 0,
-          accent: l === "running"
+          label: r,
+          value: ((y = a == null ? void 0 : a.counts) == null ? void 0 : y[r]) ?? 0,
+          accent: r === "running"
         },
-        l
+        r
       );
     }) }),
-    /* @__PURE__ */ n(b, { children: [
-      /* @__PURE__ */ e(E, { children: t.tabTakt }),
-      h.length ? /* @__PURE__ */ n("table", { className: "w-full border-collapse table-striped", children: [
-        /* @__PURE__ */ e("thead", { children: /* @__PURE__ */ e("tr", { children: [t.colStatus, t.colName, t.colWorkflow, t.colBranch, t.colStarted, t.colCompleted, t.colGoals].map((l) => /* @__PURE__ */ e("th", { className: "text-left text-muted text-[12px] uppercase tracking-[.04em] px-2.5 py-2 border-b border-border font-medium", children: l }, l)) }) }),
-        /* @__PURE__ */ e("tbody", { children: h.map((l, S) => /* @__PURE__ */ n(
+    /* @__PURE__ */ s(S, { children: [
+      /* @__PURE__ */ e($, { children: t.tabTakt }),
+      p.length ? /* @__PURE__ */ s("table", { className: "w-full border-collapse table-striped", children: [
+        /* @__PURE__ */ e("thead", { children: /* @__PURE__ */ e("tr", { children: [t.colStatus, t.colName, t.colWorkflow, t.colBranch, t.colStarted, t.colCompleted, t.colGoals].map((r) => /* @__PURE__ */ e("th", { className: "text-left text-muted text-[12px] uppercase tracking-[.04em] px-2.5 py-2 border-b border-border font-medium", children: r }, r)) }) }),
+        /* @__PURE__ */ e("tbody", { children: p.map((r, y) => /* @__PURE__ */ s(
           "tr",
           {
-            onClick: () => l.runSlug && p(l.runSlug),
-            className: `cursor-pointer ${l.runSlug && l.runSlug === f ? "bg-accent/10" : "hover:bg-raised"}`,
+            onClick: () => r.runSlug && m(r.runSlug),
+            className: `cursor-pointer ${r.runSlug && r.runSlug === g ? "bg-accent/10" : "hover:bg-raised"}`,
             children: [
-              /* @__PURE__ */ e("td", { className: "px-2.5 py-2", children: /* @__PURE__ */ e(L, { variant: J(l.status), children: l.status }) }),
-              /* @__PURE__ */ n("td", { className: "px-2.5 py-2 text-sm", children: [
-                l.runSlug ? /* @__PURE__ */ e(V, { onClick: () => p(l.runSlug), children: l.name }) : l.name,
-                l.failure && $e.has(l.status ?? "") ? /* @__PURE__ */ n("div", { className: "text-[12px] text-danger", children: [
-                  t.failureAt(l.failure.step),
-                  l.failure.error ? `: ${l.failure.error.slice(0, 200)}` : ""
+              /* @__PURE__ */ e("td", { className: "px-2.5 py-2", children: /* @__PURE__ */ e(M, { variant: V(r.status), children: r.status }) }),
+              /* @__PURE__ */ s("td", { className: "px-2.5 py-2 text-sm", children: [
+                r.runSlug ? /* @__PURE__ */ e(X, { onClick: () => m(r.runSlug), children: r.name }) : r.name,
+                r.failure && Ae.has(r.status ?? "") ? /* @__PURE__ */ s("div", { className: "text-[12px] text-danger", children: [
+                  t.failureAt(r.failure.step),
+                  r.failure.error ? `: ${r.failure.error.slice(0, 200)}` : ""
                 ] }) : null
               ] }),
-              /* @__PURE__ */ e("td", { className: "px-2.5 py-2 text-sm", children: l.workflow ?? "—" }),
-              /* @__PURE__ */ e("td", { className: "px-2.5 py-2 text-sm font-mono text-[13px]", children: l.branch ?? "—" }),
-              /* @__PURE__ */ e("td", { className: "px-2.5 py-2 text-sm text-muted", children: U(l.startedAt) }),
-              /* @__PURE__ */ e("td", { className: "px-2.5 py-2 text-sm text-muted", children: U(l.completedAt) }),
-              /* @__PURE__ */ e("td", { className: "px-2.5 py-2 text-sm", children: l.goalIds.map(be).join(", ") || "—" })
+              /* @__PURE__ */ e("td", { className: "px-2.5 py-2 text-sm", children: r.workflow ?? "—" }),
+              /* @__PURE__ */ e("td", { className: "px-2.5 py-2 text-sm font-mono text-[13px]", children: r.branch ?? "—" }),
+              /* @__PURE__ */ e("td", { className: "px-2.5 py-2 text-sm text-muted", children: z(r.startedAt) }),
+              /* @__PURE__ */ e("td", { className: "px-2.5 py-2 text-sm text-muted", children: z(r.completedAt) }),
+              /* @__PURE__ */ e("td", { className: "px-2.5 py-2 text-sm", children: r.goalIds.map(be).join(", ") || "—" })
             ]
           },
-          l.name ?? S
+          r.name ?? y
         )) })
-      ] }) : /* @__PURE__ */ e(H, { icon: "📋", title: t.taktEmptyNoTasks, subtitle: t.taktEmptyNoTasksHint })
+      ] }) : /* @__PURE__ */ e(G, { icon: "📋", title: t.taktEmptyNoTasks, subtitle: t.taktEmptyNoTasksHint })
     ] }),
-    f ? /* @__PURE__ */ e(Te, { project: r, slug: f, active: m }) : h.length ? /* @__PURE__ */ e(b, { children: /* @__PURE__ */ e(H, { icon: "▶", title: t.runSelectHint }) }) : null,
-    /* @__PURE__ */ e(qe, { project: r, active: m })
+    g ? /* @__PURE__ */ e(Ce, { project: n, slug: g, active: u }) : p.length ? /* @__PURE__ */ e(S, { children: /* @__PURE__ */ e(G, { icon: "▶", title: t.runSelectHint }) }) : null,
+    /* @__PURE__ */ e(qe, { project: n, active: u })
   ] });
 }
-function qe({ project: r, active: d }) {
-  var s;
-  const m = G(), [f, p] = v(!1), x = ((s = M({
-    queryKey: ["takt-goal-files", r],
-    queryFn: () => m.get(`${R}/takt/goal-files?project=${A(r)}`),
+function qe({ project: n, active: d }) {
+  var a;
+  const u = O(), [g, m] = v(!1), x = ((a = K({
+    queryKey: ["takt-goal-files", n],
+    queryFn: () => u.get(`${C}/takt/goal-files?project=${P(n)}`),
     refetchInterval: d ? 5e3 : !1,
-    enabled: f
-  }).data) == null ? void 0 : s.goals) ?? [];
-  return /* @__PURE__ */ n(b, { children: [
-    /* @__PURE__ */ n(V, { onClick: () => p((h) => !h), className: "flex items-center justify-between", children: [
-      /* @__PURE__ */ e(E, { children: t.taktGoalFiles }),
-      /* @__PURE__ */ e("span", { className: "text-muted text-sm", children: f ? "▾" : "▸" })
+    enabled: g
+  }).data) == null ? void 0 : a.goals) ?? [];
+  return /* @__PURE__ */ s(S, { children: [
+    /* @__PURE__ */ s(X, { onClick: () => m((p) => !p), className: "flex items-center justify-between", children: [
+      /* @__PURE__ */ e($, { children: t.taktGoalFiles }),
+      /* @__PURE__ */ e("span", { className: "text-muted text-sm", children: g ? "▾" : "▸" })
     ] }),
-    f ? x.length ? /* @__PURE__ */ e("ul", { className: "mt-2 flex flex-col gap-2", children: x.map((h) => /* @__PURE__ */ n("li", { className: "border border-border rounded p-2.5 text-sm", children: [
-      /* @__PURE__ */ n("div", { className: "flex gap-2 items-center flex-wrap", children: [
-        /* @__PURE__ */ e(L, { variant: "muted", children: h.status ?? "—" }),
-        h.executionStatus ? /* @__PURE__ */ e(L, { variant: "muted", children: h.executionStatus }) : null,
-        h.branch ? /* @__PURE__ */ e("span", { className: "font-mono text-[13px]", children: h.branch }) : null
+    g ? x.length ? /* @__PURE__ */ e("ul", { className: "mt-2 flex flex-col gap-2", children: x.map((p) => /* @__PURE__ */ s("li", { className: "border border-border rounded p-2.5 text-sm", children: [
+      /* @__PURE__ */ s("div", { className: "flex gap-2 items-center flex-wrap", children: [
+        /* @__PURE__ */ e(M, { variant: "muted", children: p.status ?? "—" }),
+        p.executionStatus ? /* @__PURE__ */ e(M, { variant: "muted", children: p.executionStatus }) : null,
+        p.branch ? /* @__PURE__ */ e("span", { className: "font-mono text-[13px]", children: p.branch }) : null
       ] }),
-      /* @__PURE__ */ e("div", { className: "mt-1 whitespace-pre-wrap", children: h.objective ?? h.error ?? "—" }),
-      /* @__PURE__ */ e("div", { className: "text-[12px] text-muted mt-1 font-mono", children: h.path })
-    ] }, h.path)) }) : /* @__PURE__ */ e("p", { className: "text-sm text-muted mt-2", children: t.noReports }) : null
+      /* @__PURE__ */ e("div", { className: "mt-1 whitespace-pre-wrap", children: p.objective ?? p.error ?? "—" }),
+      /* @__PURE__ */ e("div", { className: "text-[12px] text-muted mt-1 font-mono", children: p.path })
+    ] }, p.path)) }) : /* @__PURE__ */ e("p", { className: "text-sm text-muted mt-2", children: t.noReports }) : null
   ] });
 }
-const Ee = new ge({
+function Pe({ active: n, project: d }) {
+  var k;
+  const u = O(), g = te(), [m, N] = v(""), [x, a] = v(null), p = K({
+    queryKey: ["settings"],
+    queryFn: () => u.get(`${C}/settings`),
+    refetchInterval: n ? 5e3 : !1
+  }), r = (k = p.data) == null ? void 0 : k.taktMcp;
+  ee(() => {
+    r && N(r.pinned ?? "");
+  }, [r == null ? void 0 : r.pinned]);
+  const y = J({
+    mutationFn: (o) => u.post(`${C}/settings/takt-mcp`, { path: o }),
+    onSuccess: (o) => {
+      g.setQueryData(["settings"], o), a(null);
+    },
+    onError: (o) => a(F(o))
+  });
+  return /* @__PURE__ */ s("div", { className: "flex flex-col gap-4 max-w-[760px]", children: [
+    x ? /* @__PURE__ */ e(R, { message: x, onDismiss: () => a(null) }) : null,
+    p.error ? /* @__PURE__ */ e(R, { message: F(p.error) }) : null,
+    /* @__PURE__ */ s(S, { children: [
+      /* @__PURE__ */ e($, { children: t.settingsTaktMcp }),
+      /* @__PURE__ */ e("p", { className: "text-sm text-muted mb-2", children: t.settingsTaktMcpHint }),
+      r ? r.path ? /* @__PURE__ */ s("p", { className: "text-sm mb-2", children: [
+        /* @__PURE__ */ e(M, { variant: "ok", children: t.settingsResolved(r.source ?? "") }),
+        " ",
+        /* @__PURE__ */ e("code", { className: "text-[13px]", children: r.path })
+      ] }) : /* @__PURE__ */ s("p", { className: "text-sm mb-2", children: [
+        /* @__PURE__ */ e(M, { variant: "err", children: t.settingsNotFound }),
+        " ",
+        r.error ? /* @__PURE__ */ e("span", { className: "text-muted", children: r.error }) : null
+      ] }) : null,
+      /* @__PURE__ */ s("div", { className: "flex gap-2 items-center", children: [
+        /* @__PURE__ */ e(
+          Z,
+          {
+            value: m,
+            onChange: (o) => N(o.target.value),
+            placeholder: t.settingsPathPlaceholder,
+            className: "flex-1 font-mono text-[13px]"
+          }
+        ),
+        /* @__PURE__ */ e(
+          T,
+          {
+            primary: !0,
+            disabled: y.isPending,
+            onClick: () => y.mutate(m.trim() || null),
+            children: t.settingsSave
+          }
+        ),
+        /* @__PURE__ */ e(
+          T,
+          {
+            disabled: y.isPending || !(r != null && r.pinned),
+            onClick: () => y.mutate(null),
+            children: t.settingsClear
+          }
+        )
+      ] }),
+      r != null && r.pinned ? /* @__PURE__ */ e("p", { className: "text-[12px] text-muted mt-1", children: t.settingsPinnedAt(r.pinned) }) : /* @__PURE__ */ e("p", { className: "text-[12px] text-muted mt-1", children: t.settingsAuto })
+    ] })
+  ] });
+}
+const Ee = new fe({
   defaultOptions: {
     queries: {
       retry: 1,
@@ -640,65 +737,65 @@ const Ee = new ge({
   }
 });
 function Fe() {
-  var z;
-  const r = G(), m = de().active !== !1, f = ce(), [p, k] = v(""), [x, s] = v("goals"), [h, l] = v(null), [S, w] = v(!1), [c, T] = v(!1), [j, g] = v(""), [$, i] = v(null), P = M({
+  var U;
+  const n = O(), u = de().active !== !1, g = te(), [m, N] = v(""), [x, a] = v("goals"), [p, r] = v(null), [y, k] = v(!1), [o, j] = v(!1), [A, f] = v(""), [q, c] = v(null), L = K({
     queryKey: ["projects"],
-    queryFn: () => r.get(`${R}/projects`),
-    refetchInterval: m ? 5e3 : !1
-  }), o = ((z = P.data) == null ? void 0 : z.projects) ?? [];
+    queryFn: () => n.get(`${C}/projects`),
+    refetchInterval: u ? 5e3 : !1
+  }), i = ((U = L.data) == null ? void 0 : U.projects) ?? [];
   ee(() => {
-    if (!o.length) {
-      k("");
+    if (!i.length) {
+      N("");
       return;
     }
-    if (!o.some((_) => _.path === p && !_.missing)) {
-      const _ = o.find((X) => !X.missing) ?? o[0];
-      k(_.path);
+    if (!i.some((H) => H.path === m && !H.missing)) {
+      const H = i.find((Y) => !Y.missing) ?? i[0];
+      N(H.path);
     }
-  }, [o, p]);
-  const y = () => f.invalidateQueries({ queryKey: ["projects"] }), B = Y({
-    mutationFn: (u) => r.post(`${R}/projects/add`, { path: u }),
-    onSuccess: (u) => {
-      f.setQueryData(["projects"], u), y(), w(!1), g(""), i(null), u.projects.length && k(u.projects[u.projects.length - 1].path);
+  }, [i, m]);
+  const w = () => g.invalidateQueries({ queryKey: ["projects"] }), _ = J({
+    mutationFn: (h) => n.post(`${C}/projects/add`, { path: h }),
+    onSuccess: (h) => {
+      g.setQueryData(["projects"], h), w(), k(!1), f(""), c(null), h.projects.length && N(h.projects[h.projects.length - 1].path);
     },
-    onError: (u) => i(Q(u))
-  }), K = Y({
-    mutationFn: (u) => r.post(`${R}/projects/remove`, { path: u }),
-    onSuccess: (u) => {
-      f.setQueryData(["projects"], u), y(), T(!1), i(null);
+    onError: (h) => c(F(h))
+  }), B = J({
+    mutationFn: (h) => n.post(`${C}/projects/remove`, { path: h }),
+    onSuccess: (h) => {
+      g.setQueryData(["projects"], h), w(), j(!1), c(null);
     },
-    onError: (u) => i(Q(u))
-  }), I = o.find((u) => u.path === p), D = (u) => {
-    l(u), s("takt");
+    onError: (h) => c(F(h))
+  }), I = i.find((h) => h.path === m), D = (h) => {
+    r(h), a("takt");
   };
-  return /* @__PURE__ */ n(q, { children: [
+  return /* @__PURE__ */ s(E, { children: [
     /* @__PURE__ */ e(
       pe,
       {
         title: t.appTitle,
         subtitle: t.appSubtitle,
-        actions: /* @__PURE__ */ n(q, { children: [
+        actions: /* @__PURE__ */ s(E, { children: [
           /* @__PURE__ */ e(
             he,
             {
               "aria-label": t.projectLabel,
-              options: o.map((u) => u.path),
-              optionLabels: o.map((u) => u.missing ? `${u.name}（${t.projectMissing}）` : u.name),
-              value: p,
-              onChange: k,
+              options: i.map((h) => h.path),
+              optionLabels: i.map((h) => h.missing ? `${h.name}（${t.projectMissing}）` : h.name),
+              value: m,
+              onChange: N,
               className: "min-w-[220px]"
             }
           ),
-          /* @__PURE__ */ e(C, { onClick: () => {
-            i(null), w(!0);
+          /* @__PURE__ */ e(T, { onClick: () => {
+            c(null), k(!0);
           }, children: t.projectAdd }),
           /* @__PURE__ */ e(
-            C,
+            T,
             {
               danger: !0,
               disabled: !I,
               onClick: () => {
-                i(null), T(!0);
+                c(null), j(!0);
               },
               children: t.projectRemove
             }
@@ -706,55 +803,56 @@ function Fe() {
         ] })
       }
     ),
-    /* @__PURE__ */ e("div", { className: "px-6 pb-8 overflow-y-auto flex-1 min-h-0", children: o.length ? /* @__PURE__ */ n(q, { children: [
-      P.error ? /* @__PURE__ */ e(F, { message: Q(P.error) }) : null,
+    /* @__PURE__ */ e("div", { className: "px-6 pb-8 overflow-y-auto flex-1 min-h-0", children: i.length ? /* @__PURE__ */ s(E, { children: [
+      L.error ? /* @__PURE__ */ e(R, { message: F(L.error) }) : null,
       /* @__PURE__ */ e("div", { className: "mb-4", children: /* @__PURE__ */ e(
-        fe,
+        ge,
         {
           segments: [
             { key: "goals", label: t.tabGoals },
-            { key: "takt", label: t.tabTakt }
+            { key: "takt", label: t.tabTakt },
+            { key: "settings", label: t.tabSettings }
           ],
           value: x,
-          onChange: s,
+          onChange: a,
           ariaLabel: t.appTitle
         }
       ) }),
-      p ? x === "goals" ? /* @__PURE__ */ e(Se, { project: p, active: m, onOpenRun: D }) : /* @__PURE__ */ e(
-        Ae,
+      x === "settings" ? /* @__PURE__ */ e(Pe, { active: u, project: m }) : m ? x === "goals" ? /* @__PURE__ */ e(Se, { project: m, active: u, onOpenRun: D }) : /* @__PURE__ */ e(
+        $e,
         {
-          project: p,
+          project: m,
           hasTakt: (I == null ? void 0 : I.hasTakt) ?? !1,
-          active: m,
-          runSlug: h,
-          onSelectRun: l
+          active: u,
+          runSlug: p,
+          onSelectRun: r
         }
       ) : null
     ] }) : /* @__PURE__ */ e(
-      H,
+      G,
       {
         icon: "📁",
         title: t.projectEmpty,
         subtitle: t.projectEmptyHint,
-        action: /* @__PURE__ */ e(C, { primary: !0, onClick: () => {
-          i(null), w(!0);
+        action: /* @__PURE__ */ e(T, { primary: !0, onClick: () => {
+          c(null), k(!0);
         }, children: t.projectAdd })
       }
     ) }),
-    /* @__PURE__ */ n(
+    /* @__PURE__ */ s(
       W,
       {
-        open: S,
-        onClose: () => w(!1),
+        open: y,
+        onClose: () => k(!1),
         title: t.projectAddTitle,
-        footer: /* @__PURE__ */ n(q, { children: [
-          /* @__PURE__ */ e(C, { onClick: () => w(!1), children: t.cancel }),
+        footer: /* @__PURE__ */ s(E, { children: [
+          /* @__PURE__ */ e(T, { onClick: () => k(!1), children: t.cancel }),
           /* @__PURE__ */ e(
-            C,
+            T,
             {
               primary: !0,
-              disabled: !j.trim() || B.isPending,
-              onClick: () => B.mutate(j.trim()),
+              disabled: !A.trim() || _.isPending,
+              onClick: () => _.mutate(A.trim()),
               children: t.projectAdd
             }
           )
@@ -764,45 +862,45 @@ function Fe() {
           /* @__PURE__ */ e(
             Z,
             {
-              value: j,
-              onChange: (u) => g(u.target.value),
+              value: A,
+              onChange: (h) => f(h.target.value),
               placeholder: "/abs/path/to/repo",
               className: "w-full"
             }
           ),
-          $ ? /* @__PURE__ */ e(F, { message: $ }) : null
+          q ? /* @__PURE__ */ e(R, { message: q }) : null
         ]
       }
     ),
-    /* @__PURE__ */ n(
+    /* @__PURE__ */ s(
       W,
       {
-        open: c,
-        onClose: () => T(!1),
+        open: o,
+        onClose: () => j(!1),
         title: t.projectRemoveTitle,
-        footer: /* @__PURE__ */ n(q, { children: [
-          /* @__PURE__ */ e(C, { onClick: () => T(!1), children: t.cancel }),
+        footer: /* @__PURE__ */ s(E, { children: [
+          /* @__PURE__ */ e(T, { onClick: () => j(!1), children: t.cancel }),
           /* @__PURE__ */ e(
-            C,
+            T,
             {
               danger: !0,
-              disabled: K.isPending,
-              onClick: () => I && K.mutate(I.path),
+              disabled: B.isPending,
+              onClick: () => I && B.mutate(I.path),
               children: t.projectRemove
             }
           )
         ] }),
         children: [
           /* @__PURE__ */ e("p", { className: "text-sm", children: I ? t.projectRemoveConfirm(I.name) : "" }),
-          $ ? /* @__PURE__ */ e(F, { message: $ }) : null
+          q ? /* @__PURE__ */ e(R, { message: q }) : null
         ]
       }
     )
   ] });
 }
-function Oe() {
+function He() {
   return /* @__PURE__ */ e(xe, { client: Ee, children: /* @__PURE__ */ e(Fe, {}) });
 }
 export {
-  Oe as default
+  He as default
 };
