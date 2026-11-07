@@ -12,7 +12,7 @@ export default function DirBrowser({
 }: {
   path: string
   onNavigate: (p: string) => void
-  onPick: (p: string) => void
+  onPick?: (p: string) => void
 }) {
   const api = useAppApi()
   const q = useQuery({
@@ -34,9 +34,11 @@ export default function DirBrowser({
         <code className="text-[12px] text-muted truncate flex-1">
           {d?.path ?? path}
         </code>
-        <Btn primary onClick={() => d && onPick(d.path)}>
-          {S.browsePick}
-        </Btn>
+        {onPick ? (
+          <Btn primary onClick={() => d && onPick(d.path)}>
+            {S.browsePick}
+          </Btn>
+        ) : null}
       </div>
       <div className="border border-subtle rounded max-h-[220px] overflow-y-auto">
         {q.isLoading ? (

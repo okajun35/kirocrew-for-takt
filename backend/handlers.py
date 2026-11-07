@@ -10,6 +10,8 @@ app mints a token that should mutate.
 import asyncio
 import json
 import logging
+import os
+import re
 from pathlib import Path
 
 from aiohttp import web
@@ -263,6 +265,63 @@ def _browse_directories(body):
 
 
 browse_directories = _handle_post(_browse_directories, "directories")
+
+
+# ---------------------------------------------------------------------------
+# clone + register (F5)
+# ---------------------------------------------------------------------------
+
+_CLONE_URL_RE = re.compile(r"^(https?://\S+|ssh://\S+|git@\S+)$")
+_CLONE_NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.\-]*$")
+CLONE_TIMEOUT = 300
+
+
+def _clone_project(body):
+    """git clone <url> into <parent>/<name>, then register it."""
+    from ..takt_core.util import run_git, validate_project
+
+    url = str_arg(body, "url", required=True)
+    parent_raw = str_arg(body, "parent", required=True)
+    parent = Path(parent_raw).expanduser()
+    if not parent.is_absolute():
+        raise ToolError("parent must be an absolute path")
+    if not parent.is_dir():
+        raise ToolError(f"parent is not a directory: {parent}")
+
+    local = os.path.isabs(url) and Path(url).is_dir()
+    if not local and not _CLONE_URL_RE.match(url):
+        raise ToolError(
+            "url must be an https://, ssh:// or git@ remote, "
+            "or an absolute local path"
+        )
+
+    name = str_arg(body, "name")
+    if not name:
+        name = re.sub(r"\.git$", "", url.rstrip("/").rsplit("/", 1)[-1])
+        if ":" in name:
+            name = name.rsplit(":", 1)[-1]
+    if not _CLONE_NAME_RE.match(name) or name in {".", ".."}:
+        raise ToolError(f"invalid clone directory name: {name}")
+    dest = parent / name
+    if dest.exists():
+        raise ToolError(f"destination already exists: {dest}")
+    if hostsec.is_sensitive(str(parent)) or hostsec.is_sensitive(str(dest)):
+        raise ToolError(
+            f"clone destination is protected: {dest}", code="sensitive_path"
+        )
+
+    try:
+        run_git(parent, ["clone", "--", url, name], timeout=CLONE_TIMEOUT)
+    except ToolError as e:
+        raise ToolError(hostsec.redact(str(e)))
+    if not dest.is_dir():
+        raise ToolError("clone produced no directory")
+    top = validate_project(str(dest))
+    projects.add_project(top)
+    return {"projects": projects.list_projects(), "path": top}
+
+
+clone_project = _handle_post(_clone_project, "project_clone")
 
 
 # ---------------------------------------------------------------------------

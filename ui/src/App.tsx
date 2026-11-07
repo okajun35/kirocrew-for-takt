@@ -41,6 +41,9 @@ function Page() {
   const [tab, setTab] = useState<TabKey>('goals')
   const [runSlug, setRunSlug] = useState<string | null>(null)
   const [showAdd, setShowAdd] = useState(false)
+  const [showClone, setShowClone] = useState(false)
+  const [cloneUrl, setCloneUrl] = useState('')
+  const [cloneName, setCloneName] = useState('')
   const [showRemove, setShowRemove] = useState(false)
   const [newPath, setNewPath] = useState('')
   const [browsePath, setBrowsePath] = useState('~')
@@ -83,6 +86,19 @@ function Page() {
     onError: (e) => setFormError(errMessage(e)),
   })
 
+  const cloneMut = useMutation({
+    mutationFn: (body: { url: string; parent: string; name?: string }) =>
+      api.post<ProjectsResult>(`${API}/projects/clone`, body),
+    onSuccess: (data) => {
+      qc.setQueryData(['projects'], data)
+      setShowClone(false)
+      setCloneUrl('')
+      setCloneName('')
+      setFormError(null)
+    },
+    onError: (e) => setFormError(errMessage(e)),
+  })
+
   const removeMut = useMutation({
     mutationFn: (path: string) =>
       api.post<ProjectsResult>(`${API}/projects/remove`, { path }),
@@ -117,6 +133,7 @@ function Page() {
               className="min-w-[220px]"
             />
             <Btn onClick={() => { setFormError(null); setShowAdd(true) }}>{S.projectAdd}</Btn>
+            <Btn onClick={() => { setFormError(null); setShowClone(true) }}>{S.cloneTitle}</Btn>
             <Btn
               danger
               disabled={!selected}
@@ -200,6 +217,48 @@ function Page() {
           value={newPath}
           onChange={(e) => setNewPath(e.target.value)}
           placeholder="/abs/path/to/repo"
+          className="w-full"
+        />
+        {formError ? <ErrorNotice message={formError} /> : null}
+      </Modal>
+
+      <Modal
+        open={showClone}
+        onClose={() => setShowClone(false)}
+        title={S.cloneTitle}
+        footer={
+          <>
+            <Btn onClick={() => setShowClone(false)}>{S.cancel}</Btn>
+            <Btn
+              primary
+              disabled={!cloneUrl.trim() || cloneMut.isPending}
+              onClick={() =>
+                cloneMut.mutate({
+                  url: cloneUrl.trim(),
+                  parent: browsePath,
+                  name: cloneName.trim() || undefined,
+                })
+              }
+            >
+              {S.cloneSubmit}
+            </Btn>
+          </>
+        }
+      >
+        <p className="text-sm text-muted mb-1">{S.cloneUrl}</p>
+        <Input
+          value={cloneUrl}
+          onChange={(e) => setCloneUrl(e.target.value)}
+          placeholder={S.cloneUrlHint}
+          className="w-full mb-2"
+        />
+        <p className="text-sm text-muted mb-1">{S.cloneParent}</p>
+        <DirBrowser path={browsePath} onNavigate={setBrowsePath} />
+        <p className="text-sm text-muted mt-2 mb-1">{S.cloneName}</p>
+        <Input
+          value={cloneName}
+          onChange={(e) => setCloneName(e.target.value)}
+          placeholder="repo-name"
           className="w-full"
         />
         {formError ? <ErrorNotice message={formError} /> : null}

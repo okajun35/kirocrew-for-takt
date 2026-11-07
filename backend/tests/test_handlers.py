@@ -26,7 +26,7 @@ routes_mod = load_app_module("backend.routes")
 class RouteRegistrationTests(BackendTestCase):
     def test_register_routes_shape(self):
         routes = routes_mod.register_routes(self.ctx)
-        self.assertEqual(len(routes), 18)
+        self.assertEqual(len(routes), 19)
         for r in routes:
             self.assertIn(
                 r.method, {"GET", "POST", "PUT", "DELETE", "PATCH"}
@@ -379,6 +379,73 @@ class BrowseTests(BackendTestCase):
         resp, _ = await call(
             handlers.browse_directories,
             post_req("/x", {"path": str(f)}),
+            self.ctx,
+        )
+        self.assertEqual(resp.status, 400)
+
+
+class CloneTests(BackendTestCase):
+    async def test_clone_local_path_registers(self):
+        src = Path(self.tmp.name) / "src"
+        src.mkdir()
+        import subprocess as _sp
+
+        _sp.run(
+            ["git", "init", "-q", str(src)], check=True,
+        )
+        _sp.run(
+            [
+                "git",
+                "-C",
+                str(src),
+                "-c",
+                "user.email=t@t",
+                "-c",
+                "user.name=t",
+                "commit",
+                "-qm",
+                "init",
+                "--allow-empty",
+            ],
+            check=True,
+        )
+        dest_parent = Path(self.tmp.name) / "out"
+        dest_parent.mkdir()
+        resp, body = await call(
+            handlers.clone_project,
+            post_req(
+                "/x",
+                {"url": str(src), "parent": str(dest_parent)},
+            ),
+            self.ctx,
+        )
+        self.assertEqual(resp.status, 200)
+        self.assertEqual(body["path"], str(dest_parent / "src"))
+        self.assertIn(
+            str(dest_parent / "src"),
+            [p["path"] for p in body["projects"]],
+        )
+
+    async def test_clone_rejects_bad_url_and_existing_dest(self):
+        resp, _ = await call(
+            handlers.clone_project,
+            post_req(
+                "/x",
+                {"url": "ftp://x/repo", "parent": self.tmp.name},
+            ),
+            self.ctx,
+        )
+        self.assertEqual(resp.status, 400)
+        resp, _ = await call(
+            handlers.clone_project,
+            post_req(
+                "/x",
+                {
+                    "url": "https://example.com/r.git",
+                    "parent": self.tmp.name,
+                    "name": "repo",  # already exists from setUp
+                },
+            ),
             self.ctx,
         )
         self.assertEqual(resp.status, 400)
