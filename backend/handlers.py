@@ -10,6 +10,7 @@ app mints a token that should mutate.
 import asyncio
 import json
 import logging
+from pathlib import Path
 
 from aiohttp import web
 
@@ -216,6 +217,51 @@ def _remove_project(body):
 
 add_project = _handle_post(_add_project, "project_add")
 remove_project = _handle_post(_remove_project, "project_remove")
+
+
+BROWSE_MAX_ENTRIES = 200
+
+
+def _browse_directories(body):
+    """List subdirectories for the project-picker (aidlc browse_directory)."""
+    raw = str_arg(body, "path") or "~"
+    base = Path(raw).expanduser()
+    if not base.is_absolute():
+        raise ToolError("path must be absolute")
+    if not base.is_dir():
+        raise ToolError(f"not a directory: {base}")
+    entries = []
+    truncated = False
+    try:
+        children = sorted(base.iterdir(), key=lambda p: p.name.lower())
+    except OSError as e:
+        raise ToolError(f"cannot read directory: {e.strerror or e}")
+    for child in children:
+        if len(entries) >= BROWSE_MAX_ENTRIES:
+            truncated = True
+            break
+        try:
+            if not child.is_dir() or child.name.startswith("."):
+                continue
+        except OSError:
+            continue
+        entries.append(
+            {
+                "name": child.name,
+                "path": str(child),
+                "hasGit": (child / ".git").exists(),
+                "hasTakt": (child / ".takt").is_dir(),
+            }
+        )
+    return {
+        "path": str(base),
+        "parent": str(base.parent) if base.parent != base else None,
+        "directories": entries,
+        "truncated": truncated,
+    }
+
+
+browse_directories = _handle_post(_browse_directories, "directories")
 
 
 # ---------------------------------------------------------------------------

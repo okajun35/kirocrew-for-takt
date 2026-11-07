@@ -34,6 +34,7 @@ def register_routes(ctx):
         Route("GET", "/projects", handlers.list_projects),
         Route("POST", "/projects/add", handlers.add_project),
         Route("POST", "/projects/remove", handlers.remove_project),
+        Route("POST", "/directories", handlers.browse_directories),
         Route("GET", "/goals", handlers.list_goals),
         Route("GET", "/goal", handlers.get_goal),
         Route("POST", "/goal/status", handlers.set_goal_status),

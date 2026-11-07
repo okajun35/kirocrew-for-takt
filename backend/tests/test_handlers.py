@@ -26,7 +26,7 @@ routes_mod = load_app_module("backend.routes")
 class RouteRegistrationTests(BackendTestCase):
     def test_register_routes_shape(self):
         routes = routes_mod.register_routes(self.ctx)
-        self.assertEqual(len(routes), 15)
+        self.assertEqual(len(routes), 16)
         for r in routes:
             self.assertIn(
                 r.method, {"GET", "POST", "PUT", "DELETE", "PATCH"}
@@ -348,6 +348,38 @@ class SettingsTests(BackendTestCase):
     async def test_settings_pin_rejects_missing_key(self):
         resp, body = await call(
             handlers.set_takt_mcp, post_req("/x", {}), self.ctx
+        )
+        self.assertEqual(resp.status, 400)
+
+
+class BrowseTests(BackendTestCase):
+    async def test_browse_lists_dirs_with_hints(self):
+        repo = Path(self.tmp.name) / "repo1"
+        repo.mkdir()
+        (repo / ".git").mkdir()
+        (repo / ".takt").mkdir()
+        (Path(self.tmp.name) / ".hidden").mkdir()
+        (Path(self.tmp.name) / "afile.txt").write_text("x")
+
+        resp, body = await call(
+            handlers.browse_directories,
+            post_req("/x", {"path": self.tmp.name}),
+            self.ctx,
+        )
+        self.assertEqual(resp.status, 200)
+        names = [e["name"] for e in body["directories"]]
+        self.assertEqual(names, ["repo", "repo1"])
+        hints = {e["name"]: e for e in body["directories"]}
+        self.assertTrue(hints["repo1"]["hasGit"])
+        self.assertTrue(hints["repo1"]["hasTakt"])
+
+    async def test_browse_rejects_file_and_relative(self):
+        f = Path(self.tmp.name) / "f"
+        f.write_text("x")
+        resp, _ = await call(
+            handlers.browse_directories,
+            post_req("/x", {"path": str(f)}),
+            self.ctx,
         )
         self.assertEqual(resp.status, 400)
 

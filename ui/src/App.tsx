@@ -17,6 +17,7 @@ import { API, errMessage } from './util'
 import GoalsTab from './GoalsTab'
 import TaktTab from './TaktTab'
 import SettingsTab from './SettingsTab'
+import DirBrowser from './DirBrowser'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -42,6 +43,7 @@ function Page() {
   const [showAdd, setShowAdd] = useState(false)
   const [showRemove, setShowRemove] = useState(false)
   const [newPath, setNewPath] = useState('')
+  const [browsePath, setBrowsePath] = useState('~')
   const [formError, setFormError] = useState<string | null>(null)
 
   const projectsQ = useQuery({
@@ -185,6 +187,15 @@ function Page() {
         }
       >
         <p className="text-sm text-muted mb-2">{S.projectAddHint}</p>
+        <DirBrowser
+          path={browsePath}
+          onNavigate={setBrowsePath}
+          onPick={(p) => {
+            addMut.mutate(p)
+            setShowAdd(false)
+          }}
+        />
+        <p className="text-[12px] text-muted mt-3 mb-1">{S.browseOrType}</p>
         <Input
           value={newPath}
           onChange={(e) => setNewPath(e.target.value)}
