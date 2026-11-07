@@ -83,7 +83,12 @@ export default function TaktTab({
                 <tr
                   key={t.name ?? i}
                   onClick={() => t.runSlug && onSelectRun(t.runSlug)}
-                  className={`cursor-pointer ${t.runSlug && t.runSlug === runSlug ? 'bg-accent/10' : 'hover:bg-raised'}`}
+                  title={t.runSlug ? undefined : S.runNotStarted}
+                  className={
+                    t.runSlug
+                      ? `cursor-pointer ${t.runSlug === runSlug ? 'bg-accent/10' : 'hover:bg-raised'}`
+                      : 'opacity-60 cursor-default'
+                  }
                 >
                   <td className="px-2.5 py-2"><Badge variant={badgeVariant(t.status)}>{t.status}</Badge></td>
                   <td className="px-2.5 py-2 text-sm">
