@@ -419,13 +419,18 @@ def _runner_status_for(request):
 
 
 def _runner_start(body):
-    from ..takt_core.util import validate_project
+    from ..takt_core.util import bool_arg, str_list_arg, validate_project
 
     project = validate_project(str_arg(body, "project", required=True))
     mode = str_arg(body, "mode") or "once"
     if mode not in ("once", "watch"):
         raise ToolError("mode must be once or watch")
-    return ft_runner.start(project, takt_bridge.find_takt(), mode)
+    allow = str_list_arg(body, "allow")
+    allow_all = bool_arg(body, "allowAll", default=False)
+    return ft_runner.start(
+        project, takt_bridge.find_takt(), mode,
+        allow=allow, allow_all=allow_all,
+    )
 
 
 def _runner_stop(body):

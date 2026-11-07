@@ -89,6 +89,53 @@ class RunnerTests(ForTaktTestCase):
             os.environ.pop("TAKT_BIN", None)
 
 
+class RunnerGuardTests(ForTaktTestCase):
+    def _fake_takt(self):
+        import stat as _stat
+
+        fake = os.path.join(self.tmp.name, "fake-takt")
+        with open(fake, "w") as f:
+            f.write("#!/bin/sh\nsleep 30\n")
+        os.chmod(fake, os.stat(fake).st_mode | _stat.S_IXUSR)
+        os.environ["TAKT_BIN"] = fake
+        self.addCleanup(os.environ.pop, "TAKT_BIN", None)
+
+    def _pending(self, name):
+        import yaml
+
+        d = os.path.join(self.repo, ".takt")
+        os.makedirs(d, exist_ok=True)
+        p = os.path.join(d, "tasks.yaml")
+        doc = {"tasks": []}
+        if os.path.exists(p):
+            doc = yaml.safe_load(open(p).read()) or {"tasks": []}
+        doc["tasks"].append({"name": name, "status": "pending"})
+        with open(p, "w") as f:
+            yaml.safe_dump(doc, f)
+
+    def test_foreign_pending_refused_then_allowed(self):
+        self._fake_takt()
+        self._pending("foreign-task")
+        with self.assertRaises(ToolError):
+            mcp_call("takt_run", {"project": str(self.repo)})
+        # allow naming it still runs (it is the intended set)
+        out = mcp_call(
+            "takt_run",
+            {"project": str(self.repo), "allow": ["foreign-task"]},
+        )
+        self.assertTrue(out["running"])
+        mcp_call("takt_runner_stop", {"project": str(self.repo)})
+
+    def test_allow_all_runs(self):
+        self._fake_takt()
+        self._pending("other")
+        out = mcp_call(
+            "takt_run", {"project": str(self.repo), "allowAll": True}
+        )
+        self.assertTrue(out["running"])
+        mcp_call("takt_runner_stop", {"project": str(self.repo)})
+
+
 class TransitionTests(ForTaktTestCase):
     def set_status(self, goal_id, status, reason="r", **kw):
         return mcp_call(

@@ -454,7 +454,11 @@ def h_takt_run(args):
     for the project so the user does not have to run it themselves."""
     project = validate_project(str_arg(args, "project", required=True))
     mode = str_arg(args, "mode") or "once"
-    return ft_runner.start(project, ft_takt.find_takt(), mode)
+    allow = str_list_arg(args, "allow")
+    allow_all = bool_arg(args, "allowAll", default=False)
+    return ft_runner.start(
+        project, ft_takt.find_takt(), mode, allow=allow, allow_all=allow_all
+    )
 
 
 def h_takt_runner_status(args):
@@ -695,9 +699,14 @@ TOOLS = [
     },
     {
         "name": "takt_run",
-        "description": "Start a detached `takt run` (mode=once, default) or `takt watch` (mode=watch) in the project so queued tasks execute without the user running takt themselves. Refuses if a runner is already alive.",
+        "description": "Start a detached `takt run` (mode=once, default) or `takt watch` (mode=watch) in the project so queued tasks execute without the user running takt themselves. Refuses if a runner is already alive, and refuses (409) when pending tasks exist that are not in `allow` — takt run executes EVERY pending task, so pass allow=[task names you expect] or allowAll=true to run all of them.",
         "inputSchema": _schema(
-            {"project": _OBJECTIVE, "mode": {"type": "string", "enum": ["once", "watch"]}},
+            {
+                "project": _OBJECTIVE,
+                "mode": {"type": "string", "enum": ["once", "watch"]},
+                "allow": _STRINGS,
+                "allowAll": {"type": "boolean"},
+            },
             ["project"],
         ),
         "handler": h_takt_run,

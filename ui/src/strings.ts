@@ -74,6 +74,10 @@ export const S = {
   runnerStartOnce: 'run（1回）',
   runnerStartWatch: 'watch（常駐）',
   runnerStop: '停止',
+  runnerConfirmTitle: 'pending タスクも実行されます',
+  runnerConfirmBody: (n: number) =>
+    `takt run / watch は pending のタスクをすべて実行します。次の ${n} 件が対象になります。`,
+  runnerConfirmRun: 'すべて実行',
   colStatus: '状態',
   colName: '名前',
   colWorkflow: 'workflow',

@@ -119,7 +119,7 @@ export default function TaktTab({
         )}
       </Card>
 
-      <RunnerCard project={project} active={active} />
+      <RunnerCard project={project} active={active} tasks={tasks} />
 
       {runSlug ? (
         <RunDetail project={project} slug={runSlug} active={active} />
@@ -177,10 +177,14 @@ function EnqueueButton({ project, active }: { project: string; active: boolean }
 }
 
 
-function RunnerCard({ project, active }: { project: string; active: boolean }) {
+function RunnerCard({ project, active, tasks }: { project: string; active: boolean; tasks: TaktTasksResult['tasks'] }) {
   const api = useAppApi()
   const qc = useQueryClient()
   const [err, setErr] = useState<string | null>(null)
+  const [confirmMode, setConfirmMode] = useState<'once' | 'watch' | null>(null)
+  const pendingNames = tasks
+    .filter((t) => t.status === 'pending' && t.name)
+    .map((t) => t.name as string)
   const q = useQuery({
     queryKey: ['runner', project],
     queryFn: () => api.get<RunnerStatus>(`${API}/takt/runner?project=${enc(project)}`),
@@ -189,7 +193,11 @@ function RunnerCard({ project, active }: { project: string; active: boolean }) {
   const r = q.data?.runner
   const start = useMutation({
     mutationFn: (mode: 'once' | 'watch') =>
-      api.post(`${API}/takt/runner/start`, { project, mode }),
+      api.post(`${API}/takt/runner/start`, {
+        project,
+        mode,
+        allowAll: true,
+      }),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['runner', project] }); setErr(null) },
     onError: (e) => setErr(errMessage(e)),
   })
@@ -208,10 +216,20 @@ function RunnerCard({ project, active }: { project: string; active: boolean }) {
           <Badge variant="muted">{S.runnerStopped}</Badge>
         )}
         <span className="ml-auto flex gap-2">
-          <Btn disabled={q.data?.running || start.isPending} onClick={() => start.mutate('once')}>
+          <Btn
+            disabled={q.data?.running || start.isPending}
+            onClick={() =>
+              pendingNames.length ? setConfirmMode('once') : start.mutate('once')
+            }
+          >
             {S.runnerStartOnce}
           </Btn>
-          <Btn disabled={q.data?.running || start.isPending} onClick={() => start.mutate('watch')}>
+          <Btn
+            disabled={q.data?.running || start.isPending}
+            onClick={() =>
+              pendingNames.length ? setConfirmMode('watch') : start.mutate('watch')
+            }
+          >
             {S.runnerStartWatch}
           </Btn>
           <Btn danger disabled={!q.data?.running || stop.isPending} onClick={() => stop.mutate()}>
@@ -225,6 +243,33 @@ function RunnerCard({ project, active }: { project: string; active: boolean }) {
           {r.logTail.join('\n')}
         </pre>
       ) : null}
+      <Modal
+        open={confirmMode !== null}
+        onClose={() => setConfirmMode(null)}
+        title={S.runnerConfirmTitle}
+        footer={
+          <>
+            <Btn onClick={() => setConfirmMode(null)}>{S.cancel}</Btn>
+            <Btn
+              primary
+              disabled={start.isPending}
+              onClick={() => {
+                if (confirmMode) start.mutate(confirmMode)
+                setConfirmMode(null)
+              }}
+            >
+              {S.runnerConfirmRun}
+            </Btn>
+          </>
+        }
+      >
+        <p className="text-sm">{S.runnerConfirmBody(pendingNames.length)}</p>
+        <ul className="text-[13px] font-mono mt-2 max-h-[140px] overflow-y-auto">
+          {pendingNames.map((n) => (
+            <li key={n}>・{n}</li>
+          ))}
+        </ul>
+      </Modal>
     </Card>
   )
 }

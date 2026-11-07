@@ -18,6 +18,8 @@ from .util import ToolError, atomic_write_json, data_dir, now_iso
 
 MODES = ("once", "watch")
 _TAIL_LINES = 20
+#: Task states `takt run`/`takt watch` will pick up.
+PICKED_UP = ("pending",)
 
 
 def _key(project: str) -> str:
@@ -86,9 +88,40 @@ def status(project: str) -> dict:
     }
 
 
-def start(project: str, takt_bin: str, mode: str = "once") -> dict:
+def pending_names(project: str) -> list[str]:
+    """Names of queued tasks `takt run` would execute — read-only."""
+    from . import takt_files
+
+    try:
+        data = takt_files.list_tasks(project)
+    except ToolError:
+        return []
+    return [
+        t["name"]
+        for t in data.get("tasks", [])
+        if t.get("status") in PICKED_UP and t.get("name")
+    ]
+
+
+def start(
+    project: str,
+    takt_bin: str,
+    mode: str = "once",
+    allow=None,
+    allow_all: bool = False,
+) -> dict:
     if mode not in MODES:
         raise ToolError(f"mode must be one of {MODES}")
+    queued = pending_names(project)
+    allowed = set(allow or [])
+    foreign = [n for n in queued if n not in allowed]
+    if foreign and not allow_all:
+        raise ToolError(
+            "takt run executes every pending task, and these are not in "
+            f"your allow list: {', '.join(foreign)}. Pass allow=[...] or "
+            "allowAll=true to run them anyway.",
+            code="conflict",
+        )
     st = status(project)
     if st["running"]:
         raise ToolError(
