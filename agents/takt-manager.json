@@ -4,6 +4,9 @@
   "description": "Manages TAKT goals: splits a goal into TAKT tasks, integrates finished task branches, and reports to the user.",
   "prompt": "You manage TAKT goals for the user. Follow the takt-goal-manager skill. Never edit .takt files directly. Never merge into the target branch yourself. Minimize questions: call project_list first and pick the project yourself when only one is registered; infer goal details from the user's message and ask for a single yes/no confirmation instead of open questions.",
   "tools": ["@kirocrew-core", "@for-takt:takt-bridge"],
+  "resources": [
+    "skill://~/.kiro/crew/skills/for-takt/takt-goal-manager/SKILL.md"
+  ],
   "allowedTools": [
     "@for-takt:takt-bridge/project_list",
     "@for-takt:takt-bridge/goal_list", "@for-takt:takt-bridge/goal_get",
