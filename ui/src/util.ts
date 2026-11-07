@@ -1,4 +1,4 @@
-import { S } from './strings'
+import { S, ERROR_MESSAGES } from './strings'
 
 export const API = '/api/apps/for-takt'
 
@@ -60,6 +60,10 @@ export function errMessage(e: unknown): string {
     if (typeof anyE.body === 'string' && anyE.body) {
       try {
         const parsed = JSON.parse(anyE.body)
+        if (parsed && typeof parsed.code === 'string' && ERROR_MESSAGES[parsed.code]) {
+          const detail = typeof parsed.error === 'string' ? parsed.error : ''
+          return `${ERROR_MESSAGES[parsed.code]}${detail ? `（${detail}）` : ''}`
+        }
         if (parsed && typeof parsed.error === 'string') return parsed.error
       } catch {
         /* fall through */
@@ -68,7 +72,7 @@ export function errMessage(e: unknown): string {
     }
     if (typeof anyE.message === 'string' && anyE.message) return anyE.message
   }
-  return String(e)
+  return S.errorGeneric
 }
 
 export function errStatus(e: unknown): number | null {

@@ -8,11 +8,12 @@ instead of an exception.
 import json
 import os
 import re
+import stat
 from pathlib import Path
 
 import yaml
 
-from . import goals
+from . import goals, hostsec
 from .util import ToolError
 
 TASKS_YAML_MAX = 5 * 1024 * 1024
@@ -54,7 +55,17 @@ def _retryable(message):
     return {"error": message, "retryable": True}
 
 
+def _is_regular(path):
+    """A real file, not a symlink, FIFO, device or directory."""
+    try:
+        return stat.S_ISREG(Path(path).lstat().st_mode)
+    except OSError:
+        return False
+
+
 def _load_capped(path, max_bytes, what):
+    if not _is_regular(path):
+        raise ToolError(f"{what} is not a regular file")
     with open(path, "rb") as f:
         data = f.read(max_bytes + 1)
     if len(data) > max_bytes:
@@ -307,7 +318,7 @@ def run_detail(project, slug):
 
 def _truncate_strings(obj):
     if isinstance(obj, str):
-        return obj[:RECORD_STR_MAX]
+        return hostsec.redact(obj[:RECORD_STR_MAX])
     if isinstance(obj, list):
         return [_truncate_strings(v) for v in obj]
     if isinstance(obj, dict):
@@ -322,6 +333,8 @@ def run_log(project, slug, offset=0):
     if not logs:
         raise ToolError(f"no session log for run: {slug}", code="not_found")
     path = logs[-1]
+    if not _is_regular(path):
+        raise ToolError(f"session log is not a regular file", code="not_found")
     try:
         size = path.stat().st_size
     except OSError as e:
@@ -383,6 +396,8 @@ def report(project, slug, name):
     real_dir = Path(os.path.realpath(reports_dir))
     if real.parent != real_dir or real.name != name:
         raise ToolError(f"report not found: {name}", code="not_found")
+    if not _is_regular(cand):
+        raise ToolError(f"report not found: {name}", code="not_found")
     try:
         with open(real, "rb") as f:
             data = f.read(REPORT_MAX + 1)
@@ -393,6 +408,6 @@ def report(project, slug, name):
         data = data[:REPORT_MAX]
     return {
         "name": name,
-        "text": data.decode("utf-8", errors="replace"),
+        "text": hostsec.redact(data.decode("utf-8", errors="replace")),
         "truncated": truncated,
     }

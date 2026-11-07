@@ -28,6 +28,7 @@ def register_routes(ctx):
                 f"host provides {sdk}"
             )
     return [
+        Route("GET", "/health", handlers.health),
         Route("GET", "/projects", handlers.list_projects),
         Route("POST", "/projects/add", handlers.add_project),
         Route("POST", "/projects/remove", handlers.remove_project),

@@ -65,20 +65,26 @@ def make_repo(path):
     return path
 
 
-def get_req(path):
-    return make_mocked_request("GET", path)
+def get_req(path, user="test-user", app=""):
+    req = make_mocked_request("GET", path)
+    req["user"] = user
+    req["app"] = app
+    return req
 
 
-def post_req(path, body):
+def post_req(path, body, user="test-user", app=""):
     payload = streams.StreamReader(protocol=mock.Mock(), limit=2**16)
     payload.feed_data(json.dumps(body).encode("utf-8"))
     payload.feed_eof()
-    return make_mocked_request(
+    req = make_mocked_request(
         "POST",
         path,
         headers={"Content-Type": "application/json"},
         payload=payload,
     )
+    req["user"] = user
+    req["app"] = app
+    return req
 
 
 class FakeCtx:

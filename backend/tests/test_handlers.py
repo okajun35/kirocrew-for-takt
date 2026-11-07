@@ -26,7 +26,7 @@ routes_mod = load_app_module("backend.routes")
 class RouteRegistrationTests(BackendTestCase):
     def test_register_routes_shape(self):
         routes = routes_mod.register_routes(self.ctx)
-        self.assertEqual(len(routes), 12)
+        self.assertEqual(len(routes), 13)
         for r in routes:
             self.assertIn(
                 r.method, {"GET", "POST", "PUT", "DELETE", "PATCH"}
@@ -302,6 +302,80 @@ class GoalHandlerTests(BackendTestCase):
         self.assertEqual(resp.status, 200)
         self.assertEqual(len(body["goals"]), 1)
         self.assertEqual(body["goals"][0]["status"], "active")
+
+
+class HardeningTests(BackendTestCase):
+    async def test_get_without_user_is_401(self):
+        resp, body = await call(
+            handlers.list_projects, get_req("/x", user=None), self.ctx
+        )
+        self.assertEqual(resp.status, 401)
+        self.assertEqual(body["code"], "unauthorized")
+
+    async def test_post_app_token_is_403(self):
+        resp, body = await call(
+            handlers.add_project,
+            post_req("/x", {"path": self.repo}, app="for-takt"),
+            self.ctx,
+        )
+        self.assertEqual(resp.status, 403)
+        self.assertEqual(body["code"], "app_token_forbidden")
+        self.assertEqual(self.ctx.owner_calls, [])
+
+    async def test_post_oversized_body_is_400(self):
+        from unittest import mock
+        from aiohttp.test_utils import make_mocked_request
+
+        req = make_mocked_request(
+            "POST", "/x", headers={"Content-Length": str(1 << 21)}
+        )
+        req["user"] = "test-user"
+        req["app"] = ""
+        with mock.patch.object(handlers, "MAX_BODY_BYTES", 16):
+            resp, body = await call(handlers.add_project, req, self.ctx)
+        self.assertEqual(resp.status, 400)
+
+    async def test_add_project_sensitive_path_is_403(self):
+        from unittest import mock
+
+        hostsec = load_app_module("takt_core.hostsec")
+        with mock.patch.object(hostsec, "is_sensitive", return_value=True):
+            resp, body = await call(
+                handlers.add_project,
+                post_req("/x", {"path": self.repo}),
+                self.ctx,
+            )
+        self.assertEqual(resp.status, 403)
+        self.assertEqual(body["code"], "sensitive_path")
+        self.assertNotIn(
+            self.repo,
+            [p["path"] for p in projects.list_projects()],
+        )
+
+    async def test_health(self):
+        resp, body = await call(handlers.health, get_req("/x"), self.ctx)
+        self.assertEqual(resp.status, 200)
+        self.assertEqual(body["name"], "for-takt")
+        self.assertTrue(body["ok"])
+        self.assertIn("taktMcp", body)
+
+    def test_route_auth_attributes(self):
+        ctx = FakeCtx()
+        table = routes_mod.register_routes(ctx)
+        self.assertTrue(table)
+        for route in table:
+            h = route.handler
+            self.assertTrue(
+                getattr(h, "__kirocrew_authenticated__", False),
+                f"{route.method} {route.path} lacks authenticated attr",
+            )
+            owner = getattr(h, "__kirocrew_owner_only__", None)
+            if route.method == "GET":
+                self.assertFalse(owner, f"{route.path} marked owner-only")
+            else:
+                self.assertTrue(
+                    owner, f"{route.method} {route.path} not owner-only"
+                )
 
 
 if __name__ == "__main__":

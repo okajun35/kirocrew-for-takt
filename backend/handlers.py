@@ -1,9 +1,10 @@
 """Dashboard route handlers (DESIGN-ui §3).
 
 Handlers run on the gateway event loop: every file read, git call and
-takt-mcp bridge call goes through asyncio.to_thread. Every POST is
-owner-gated via ctx.require_owner unless the caller carries an app
-token (request["app"]).
+takt-mcp bridge call goes through asyncio.to_thread. Every GET requires
+an authenticated subject (request["user"]); every POST is owner-gated via
+ctx.require_owner, and app tokens are refused outright — nothing in this
+app mints a token that should mutate.
 """
 
 import asyncio
@@ -12,14 +13,29 @@ import logging
 
 from aiohttp import web
 
-from ..takt_core import goals, gitops, projects, takt_bridge, takt_files
+from ..takt_core import goals, gitops, hostsec, projects, takt_bridge, takt_files
 from ..takt_core.util import ToolError, int_arg, now_iso, str_arg
 
-_STATUS_BY_CODE = {"bad_request": 400, "not_found": 404, "conflict": 409}
+#: Largest accepted request body (reasons and answers are the big fields).
+MAX_BODY_BYTES = 1 << 20
+
+_STATUS_BY_CODE = {
+    "bad_request": 400,
+    "unauthorized": 401,
+    "owner_only": 403,
+    "app_token_forbidden": 403,
+    "sensitive_path": 403,
+    "not_found": 404,
+    "conflict": 409,
+}
 
 
 def _json(obj, status=200):
-    return web.json_response(obj, status=status)
+    return web.json_response(
+        obj,
+        status=status,
+        dumps=lambda o: json.dumps(o, ensure_ascii=False, default=str),
+    )
 
 
 def _tool_error(err):
@@ -53,6 +69,11 @@ def _registered_project(request):
 
 
 async def _body(request):
+    length = request.content_length
+    if length is not None and int(length) > MAX_BODY_BYTES:
+        raise ToolError(
+            f"request body exceeds {MAX_BODY_BYTES} bytes", code="bad_request"
+        )
     try:
         data = await request.json()
     except (json.JSONDecodeError, UnicodeDecodeError):
@@ -65,7 +86,13 @@ async def _body(request):
 async def _guard(request, ctx, op):
     """Owner gate for writes; returns the response to send, or None."""
     if request.get("app"):
-        return None
+        return _json(
+            {
+                "error": "app tokens cannot perform this operation",
+                "code": "app_token_forbidden",
+            },
+            status=403,
+        )
     gate = getattr(ctx, "require_owner", None)
     if gate is None:
         return _json(
@@ -76,9 +103,14 @@ async def _guard(request, ctx, op):
 
 
 def _handle(fn):
-    """Wrap a sync reader: run it in a worker thread, map errors."""
+    """Wrap a sync reader: authenticate, run it in a worker, map errors."""
 
     async def handler(request, ctx):
+        if not str(request.get("user") or ""):
+            return _json(
+                {"error": "authentication required", "code": "unauthorized"},
+                status=401,
+            )
         try:
             return _json(await asyncio.to_thread(fn, request))
         except ToolError as e:
@@ -86,6 +118,8 @@ def _handle(fn):
         except Exception as e:
             return _internal(e, ctx)
 
+    handler.__kirocrew_authenticated__ = True
+    handler.__kirocrew_owner_only__ = False
     return handler
 
 
@@ -104,7 +138,46 @@ def _handle_post(fn, op):
         except Exception as e:
             return _internal(e, ctx)
 
+    handler.__kirocrew_authenticated__ = True
+    handler.__kirocrew_owner_only__ = True
     return handler
+
+
+# ---------------------------------------------------------------------------
+# health
+# ---------------------------------------------------------------------------
+
+async def health(request, ctx):
+    """Route-registration check plus tool availability. Cheap and sync-only."""
+    if not str(request.get("user") or ""):
+        return _json(
+            {"error": "authentication required", "code": "unauthorized"},
+            status=401,
+        )
+
+    def build():
+        out = {"ok": True, "name": "for-takt"}
+        try:
+            out["taktMcp"] = takt_bridge.find_takt_mcp()
+        except Exception as e:
+            out["taktMcp"] = None
+            out["taktMcpError"] = str(e)
+        try:
+            out["projects"] = len(projects.list_projects())
+        except Exception:
+            out["projects"] = None
+        return out
+
+    try:
+        result = await asyncio.to_thread(build)
+    except Exception as e:
+        return _internal(e, ctx)
+    result["sdkLevel"] = getattr(ctx, "sdk_level", None)
+    return _json(result)
+
+
+health.__kirocrew_authenticated__ = True
+health.__kirocrew_owner_only__ = False
 
 
 # ---------------------------------------------------------------------------
@@ -117,7 +190,14 @@ def list_projects(request):
 
 
 def _add_project(body):
-    projects.add_project(str_arg(body, "path", required=True))
+    from ..takt_core.util import validate_project
+
+    top = validate_project(str_arg(body, "path", required=True))
+    if hostsec.is_sensitive(top):
+        raise ToolError(
+            f"project path is protected: {top}", code="sensitive_path"
+        )
+    projects.add_project(top)
     return {"projects": projects.list_projects()}
 
 

@@ -91,4 +91,28 @@ export const S = {
   noSteps: 'ステップ記録はありません',
   noQuestions: '未回答の質問はありません',
   truncatedReport: '（512 KiB で切り詰めました）',
+
+  // backend の error.code に対応する日本語メッセージ。
+  // 未知の code には errorGeneric を使う（英語の error 文字列はそのまま出さない）。
+  errorBadRequest: 'リクエストが不正です',
+  errorUnauthorized: '認証が必要です',
+  errorOwnerOnly: 'オーナー権限が必要です',
+  errorAppTokenForbidden: 'アプリトークンではこの操作はできません',
+  errorSensitivePath: '保護されたパスのため登録できません',
+  errorNotFound: '見つかりません',
+  errorConflict: '他の変更と競合しました',
+  errorInternal: '内部エラーが発生しました',
+  errorGeneric: 'エラーが発生しました',
 } as const
+
+// error.code -> strings key の対応表
+export const ERROR_MESSAGES: Record<string, string> = {
+  bad_request: S.errorBadRequest,
+  unauthorized: S.errorUnauthorized,
+  owner_only: S.errorOwnerOnly,
+  app_token_forbidden: S.errorAppTokenForbidden,
+  sensitive_path: S.errorSensitivePath,
+  not_found: S.errorNotFound,
+  conflict: S.errorConflict,
+  internal: S.errorInternal,
+}
