@@ -30,9 +30,9 @@ def _version_key(path):
     return tuple(int(x) for x in m.groups()) if m else (0, 0, 0)
 
 
-def _nvm_candidates():
+def _nvm_candidates(binary="takt-mcp"):
     candidates = glob.glob(
-        os.path.expanduser("~/.nvm/versions/node/*/bin/takt-mcp")
+        os.path.expanduser(f"~/.nvm/versions/node/*/bin/{binary}")
     )
     candidates = [c for c in candidates if os.access(c, os.X_OK)]
     candidates.sort(key=_version_key, reverse=True)
@@ -58,6 +58,21 @@ def find_takt_mcp():
 def resolve_takt_mcp():
     """Like find_takt_mcp but reports which source produced the path."""
     return _resolve()
+
+
+def find_takt():
+    """Resolve the `takt` CLI (TAKT_BIN → PATH → newest nvm install)."""
+    env_bin = os.environ.get("TAKT_BIN")
+    if env_bin:
+        if os.path.isfile(env_bin) and os.access(env_bin, os.X_OK):
+            return env_bin
+        raise ToolError(f"TAKT_BIN is set but not executable: {env_bin}")
+    found = shutil.which("takt")
+    if found:
+        return found
+    for c in _nvm_candidates("takt"):
+        return c
+    raise ToolError("takt executable not found (set TAKT_BIN or install takt)")
 
 
 def _resolve():

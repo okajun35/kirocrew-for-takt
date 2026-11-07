@@ -63,6 +63,32 @@ class ProjectListTests(ForTaktTestCase):
         self.assertIn("hasTakt", out["projects"][0])
 
 
+class RunnerTests(ForTaktTestCase):
+    def test_run_start_status_stop(self):
+        import stat as _stat
+
+        fake = os.path.join(self.tmp.name, "fake-takt")
+        with open(fake, "w") as f:
+            f.write("#!/bin/sh\nsleep 30\n")
+        os.chmod(fake, os.stat(fake).st_mode | _stat.S_IXUSR)
+        os.environ["TAKT_BIN"] = fake
+        try:
+            out = mcp_call("takt_run", {"project": str(self.repo)})
+            self.assertTrue(out["running"])
+            pid = out["runner"]["pid"]
+            # second start refused
+            with self.assertRaises(ToolError):
+                mcp_call("takt_run", {"project": str(self.repo)})
+            st = mcp_call("takt_runner_status", {"project": str(self.repo)})
+            self.assertTrue(st["running"])
+            stop = mcp_call("takt_runner_stop", {"project": str(self.repo)})
+            self.assertTrue(stop["stopped"])
+            st = mcp_call("takt_runner_status", {"project": str(self.repo)})
+            self.assertFalse(st["running"])
+        finally:
+            os.environ.pop("TAKT_BIN", None)
+
+
 class TransitionTests(ForTaktTestCase):
     def set_status(self, goal_id, status, reason="r", **kw):
         return mcp_call(

@@ -18,6 +18,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from takt_core import goals as ft_goals
 from takt_core import gitops as ft_git
 from takt_core import projects as ft_projects
+from takt_core import runner as ft_runner
 from takt_core import takt_bridge as ft_takt
 from takt_core.util import (
     ToolError,
@@ -448,6 +449,24 @@ def h_takt_tell(args):
     )
 
 
+def h_takt_run(args):
+    """Start a detached `takt run` (mode=once) or `takt watch` (mode=watch)
+    for the project so the user does not have to run it themselves."""
+    project = validate_project(str_arg(args, "project", required=True))
+    mode = str_arg(args, "mode") or "once"
+    return ft_runner.start(project, ft_takt.find_takt(), mode)
+
+
+def h_takt_runner_status(args):
+    project = validate_project(str_arg(args, "project", required=True))
+    return ft_runner.status(project)
+
+
+def h_takt_runner_stop(args):
+    project = validate_project(str_arg(args, "project", required=True))
+    return ft_runner.stop(project)
+
+
 def h_takt_goal_files(args):
     project = validate_project(str_arg(args, "project", required=True))
     return ft_takt.takt_goal_files(project)
@@ -673,6 +692,27 @@ TOOLS = [
             ["project", "runSlug", "content"],
         ),
         "handler": h_takt_tell,
+    },
+    {
+        "name": "takt_run",
+        "description": "Start a detached `takt run` (mode=once, default) or `takt watch` (mode=watch) in the project so queued tasks execute without the user running takt themselves. Refuses if a runner is already alive.",
+        "inputSchema": _schema(
+            {"project": _OBJECTIVE, "mode": {"type": "string", "enum": ["once", "watch"]}},
+            ["project"],
+        ),
+        "handler": h_takt_run,
+    },
+    {
+        "name": "takt_runner_status",
+        "description": "Report whether a detached takt runner is alive for the project, with its pid and recent log lines.",
+        "inputSchema": _schema({"project": _OBJECTIVE}, ["project"]),
+        "handler": h_takt_runner_status,
+    },
+    {
+        "name": "takt_runner_stop",
+        "description": "SIGTERM the detached takt runner recorded for the project (no-op when none is running).",
+        "inputSchema": _schema({"project": _OBJECTIVE}, ["project"]),
+        "handler": h_takt_runner_stop,
     },
     {
         "name": "takt_goal_files",

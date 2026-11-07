@@ -25,7 +25,7 @@ Hard rules:
 - Split the goal into units that can be verified independently.
 - Always confirm the `workflow` and `autoPr` with the user before enqueueing (`autoPr` is normally `false`).
 - `takt_enqueue` with `goalId` — the bridge sets `taskContext.baseBranch` to the goal branch and records the task on the goal.
-- The tasks run under `takt run` / `takt watch` outside this app.
+- **Start the runner yourself** with `takt_run` (mode `once` processes the queue and exits; `watch` keeps running). Never tell the user to run `takt run` manually. Poll `takt_runner_status` for the pid/log tail. `takt_runner_stop` stops a watch-mode runner.
 
 ### 3. Patrol and integrate
 

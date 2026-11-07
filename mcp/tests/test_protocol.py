@@ -101,6 +101,7 @@ class ProtocolTests(ForTaktTestCase):
             "goal_withdraw_question", "goal_task_update", "goal_complete",
             "integration_check", "integration_apply",
             "takt_tasks", "takt_run_detail", "takt_enqueue", "takt_tell",
+            "takt_run", "takt_runner_status", "takt_runner_stop",
             "takt_goal_files",
         }
         self.assertEqual(names, expected)
