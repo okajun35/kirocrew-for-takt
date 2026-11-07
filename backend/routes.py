@@ -31,6 +31,8 @@ def register_routes(ctx):
         Route("GET", "/health", handlers.health),
         Route("GET", "/settings", handlers.get_settings),
         Route("POST", "/settings/takt-mcp", handlers.set_takt_mcp),
+        Route("GET", "/takt/config", handlers.get_takt_config),
+        Route("POST", "/takt/config", handlers.set_takt_config),
         Route("GET", "/projects", handlers.list_projects),
         Route("POST", "/projects/add", handlers.add_project),
         Route("POST", "/projects/remove", handlers.remove_project),

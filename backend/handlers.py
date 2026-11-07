@@ -21,6 +21,7 @@ from ..takt_core import (
     projects,
     settings,
     takt_bridge,
+    takt_config,
     takt_files,
 )
 from ..takt_core.util import ToolError, int_arg, now_iso, str_arg
@@ -297,6 +298,31 @@ def _set_takt_mcp(body):
 
 
 set_takt_mcp = _handle_post(_set_takt_mcp, "settings_takt_mcp")
+
+
+# ---------------------------------------------------------------------------
+# takt config (~/.takt/config.yaml — whitelist write; project file read-only)
+# ---------------------------------------------------------------------------
+
+@_handle
+def get_takt_config(request):
+    project = _query(request, "project")
+    resolved = (
+        projects.require_registered(project) if project else None
+    )
+    return takt_config.config_view(resolved)
+
+
+def _set_takt_config(body):
+    changes = body.get("changes")
+    revision = body.get("revision")
+    if revision is not None and not isinstance(revision, str):
+        raise ToolError("revision must be a string or null")
+    out = takt_config.write_global(changes, revision)
+    return {"revision": out["revision"], "global": out["config"]}
+
+
+set_takt_config = _handle_post(_set_takt_config, "takt_config_set")
 
 
 # ---------------------------------------------------------------------------

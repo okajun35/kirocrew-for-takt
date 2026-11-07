@@ -10,7 +10,7 @@ import {
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { S } from './strings'
-import type { SettingsResult } from './types'
+import type { SettingsResult, TaktConfigResult } from './types'
 import { API, errMessage } from './util'
 
 export default function SettingsTab({ active, project }: { active: boolean; project: string }) {
@@ -25,6 +25,32 @@ export default function SettingsTab({ active, project }: { active: boolean; proj
     refetchInterval: active ? 5000 : false,
   })
   const tool = settingsQ.data?.taktMcp
+
+  const configQ = useQuery({
+    queryKey: ['takt-config', project],
+    queryFn: () =>
+      api.get<TaktConfigResult>(
+        `${API}/takt/config?project=${encodeURIComponent(project)}`
+      ),
+    refetchInterval: active ? 5000 : false,
+  })
+  const config = configQ.data
+  const [editKey, setEditKey] = useState<string | null>(null)
+  const [editValue, setEditValue] = useState('')
+
+  const configMut = useMutation({
+    mutationFn: (changes: Record<string, string>) =>
+      api.post<{ revision: string }>(`${API}/takt/config`, {
+        changes,
+        revision: config?.revision ?? null,
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['takt-config'] })
+      setEditKey(null)
+      setNotice(null)
+    },
+    onError: (e) => setNotice(errMessage(e)),
+  })
 
   useEffect(() => {
     if (tool) setPath(tool.pinned ?? '')
@@ -89,6 +115,89 @@ export default function SettingsTab({ active, project }: { active: boolean; proj
         ) : (
           <p className="text-[12px] text-muted mt-1">{S.settingsAuto}</p>
         )}
+      </Card>
+
+      <Card>
+        <CardTitle>{S.configTitle}</CardTitle>
+        {config?.global.error ? (
+          <ErrorNotice message={config.global.error} />
+        ) : !config?.global.exists ? (
+          <p className="text-sm text-muted">{S.configNotFound}</p>
+        ) : null}
+        <p className="text-[12px] text-muted mb-1">{S.configGlobal}</p>
+        {config ? (
+          <table className="w-full text-[13px] mb-3">
+            <tbody>
+              {Object.entries(config.global.config).map(([k, v]) => (
+                <tr key={k} className="border-b border-subtle">
+                  <td className="py-1 font-mono w-[200px]">{k}</td>
+                  <td className="py-1">
+                    {editKey === k ? (
+                      <div className="flex gap-1 items-center">
+                        <Input
+                          value={editValue}
+                          onChange={(e) => setEditValue(e.target.value)}
+                          className="flex-1"
+                        />
+                        <Btn
+                          primary
+                          disabled={configMut.isPending}
+                          onClick={() =>
+                            configMut.mutate({ [k]: editValue })
+                          }
+                        >
+                          {S.configSave}
+                        </Btn>
+                      </div>
+                    ) : (
+                      typeof v === 'object' ? (
+                        <code className="text-muted">
+                          {JSON.stringify(v)}
+                        </code>
+                      ) : (
+                        <code>{String(v)}</code>
+                      )
+                    )}
+                  </td>
+                  <td className="py-1 w-[60px] text-right">
+                    {config.writableKeys.includes(k) &&
+                    editKey !== k ? (
+                      <Btn
+                        onClick={() => {
+                          setEditKey(k)
+                          setEditValue(String(v))
+                        }}
+                      >
+                        {S.configEdit}
+                      </Btn>
+                    ) : null}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : null}
+        {config?.project.exists ? (
+          <>
+            <p className="text-[12px] text-muted mb-1">{S.configProject}</p>
+            <table className="w-full text-[13px]">
+              <tbody>
+                {Object.entries(config.project.config).map(([k, v]) => (
+                  <tr key={k} className="border-b border-subtle">
+                    <td className="py-1 font-mono w-[200px]">{k}</td>
+                    <td className="py-1">
+                      <code className="text-muted">
+                        {typeof v === 'object'
+                          ? JSON.stringify(v)
+                          : String(v)}
+                      </code>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </>
+        ) : null}
       </Card>
     </div>
   )

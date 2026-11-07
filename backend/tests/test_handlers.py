@@ -26,7 +26,7 @@ routes_mod = load_app_module("backend.routes")
 class RouteRegistrationTests(BackendTestCase):
     def test_register_routes_shape(self):
         routes = routes_mod.register_routes(self.ctx)
-        self.assertEqual(len(routes), 16)
+        self.assertEqual(len(routes), 18)
         for r in routes:
             self.assertIn(
                 r.method, {"GET", "POST", "PUT", "DELETE", "PATCH"}
@@ -379,6 +379,68 @@ class BrowseTests(BackendTestCase):
         resp, _ = await call(
             handlers.browse_directories,
             post_req("/x", {"path": str(f)}),
+            self.ctx,
+        )
+        self.assertEqual(resp.status, 400)
+
+
+class TaktConfigTests(BackendTestCase):
+    def setUp(self):
+        super().setUp()
+        import os as _os
+
+        self._home = _os.environ.get("HOME")
+        _os.environ["HOME"] = self.tmp.name
+        takt_dir = Path(self.tmp.name) / ".takt"
+        takt_dir.mkdir()
+        (takt_dir / "config.yaml").write_text(
+            "provider: copilot\nmodel: gpt-5.4\n"
+        )
+
+    def tearDown(self):
+        import os as _os
+
+        if self._home is None:
+            _os.environ.pop("HOME", None)
+        else:
+            _os.environ["HOME"] = self._home
+        super().tearDown()
+
+    async def test_config_view(self):
+        resp, body = await call(
+            handlers.get_takt_config, get_req("/x"), self.ctx
+        )
+        self.assertEqual(resp.status, 200)
+        self.assertTrue(body["global"]["exists"])
+        self.assertEqual(body["global"]["config"]["provider"], "copilot")
+        self.assertIn("provider", body["writableKeys"])
+
+    async def test_config_write_whitelist_and_revision(self):
+        _, body = await call(
+            handlers.get_takt_config, get_req("/x"), self.ctx
+        )
+        rev = body["revision"]
+        resp, out = await call(
+            handlers.set_takt_config,
+            post_req("/x", {"changes": {"model": "gpt-5.5"}, "revision": rev}),
+            self.ctx,
+        )
+        self.assertEqual(resp.status, 200)
+        self.assertEqual(out["global"]["model"], "gpt-5.5")
+        # stale revision -> conflict
+        resp, _ = await call(
+            handlers.set_takt_config,
+            post_req("/x", {"changes": {"model": "x"}, "revision": rev}),
+            self.ctx,
+        )
+        self.assertEqual(resp.status, 409)
+        # non-whitelisted key -> 400
+        resp, _ = await call(
+            handlers.set_takt_config,
+            post_req(
+                "/x",
+                {"changes": {"persona_providers": {}}, "revision": "0:0"},
+            ),
             self.ctx,
         )
         self.assertEqual(resp.status, 400)
