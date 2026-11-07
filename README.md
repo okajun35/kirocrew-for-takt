@@ -112,10 +112,32 @@ All under `/api/apps/for-takt/`; reads are session-scoped, POSTs are
 owner-only (`ctx.require_owner`, fail-closed 403 when the gate is absent):
 
 ```
+GET  /health              GET  /settings            POST /settings/takt-mcp
 GET  /projects            POST /projects/add        POST /projects/remove
+                          POST /projects/clone      POST /directories
 GET  /goals  /goal        POST /goal/status         POST /goal/answer
+GET  /takt/config                                 POST /takt/config
 GET  /takt/tasks  /takt/run  /takt/run/log  /takt/run/report  /takt/goal-files
 ```
+
+Notes on the write endpoints:
+
+- `POST /projects/clone` — `git clone` an `https://`/`ssh://`/`git@` remote
+  (or an absolute local path) into a chosen parent directory and register
+  the result; sensitive destinations are refused and clone errors are
+  redacted before they reach the client.
+- `POST /settings/takt-mcp` — pin the `takt-mcp` binary (or send
+  `{"path": null}` to return to auto-detection). Resolution order:
+  app setting → `$TAKT_MCP_BIN` → `PATH` → newest nvm install.
+- `GET /takt/config` — read `~/.takt/config.yaml` (global) plus the
+  selected project's `.takt/config.yaml` (read-only).
+- `POST /takt/config` — owner-only, writes only the whitelisted scalar
+  keys `provider` / `model` / `language` to `~/.takt/config.yaml`, with a
+  `.bak` backup and an mtime revision check (`revision` field from the
+  GET response; stale revisions return 409). Project `.takt/` files stay
+  strictly read-only.
+- `POST /directories` — list subdirectories of a path (with `hasGit` /
+  `hasTakt` hints) for the project picker; capped at 200 entries.
 
 ## Test
 
@@ -149,5 +171,9 @@ not on the npm registry.
   the requested offset is past the current file size.
 - The UI exposes no integration-apply, enqueue, goal create/complete, cron/IRQ,
   SSE, or TAKT requeue/stop controls — those stay MCP-only by design.
+- Beyond DESIGN-ui: the settings tab (takt-mcp pin, `~/.takt/config.yaml`
+  whitelist edit), `POST /directories`, and `POST /projects/clone` were
+  added after reviewing the aidlc reference app; project `.takt/` files
+  remain read-only.
 
 See DESIGN.md (v0.1) and DESIGN-ui.md (v0.2) for the full specifications.
