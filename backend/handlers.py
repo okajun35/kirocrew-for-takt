@@ -21,6 +21,7 @@ from ..takt_core import (
     gitops,
     hostsec,
     projects,
+    runner as ft_runner,
     settings,
     takt_bridge,
     takt_config,
@@ -382,6 +383,66 @@ def _set_takt_config(body):
 
 
 set_takt_config = _handle_post(_set_takt_config, "takt_config_set")
+
+
+# ---------------------------------------------------------------------------
+# takt enqueue + detached runner (dashboard equivalents of `takt add`/`run`)
+# ---------------------------------------------------------------------------
+
+def _enqueue(body):
+    """Same path as MCP takt_enqueue without goalId (dashboard `takt add`)."""
+    from ..takt_core.util import bool_arg, validate_project
+
+    project = validate_project(str_arg(body, "project", required=True))
+    task = str_arg(body, "task", required=True)
+    workflow = str_arg(body, "workflow") or "default"
+    auto_pr = bool_arg(body, "autoPr", default=False)
+    worktree = bool_arg(body, "worktree", default=True)
+    out = takt_bridge.call_tool(
+        project,
+        "takt_enqueue_task",
+        {
+            "task": task,
+            "workflow": workflow,
+            "autoPr": auto_pr,
+            "worktree": worktree,
+        },
+    )
+    if isinstance(out, dict):
+        return {"result": out.get("result") or out, "taskName": out.get("taskName")}
+    return {"result": out, "taskName": None}
+
+
+def _runner_status_for(request):
+    project = projects.require_registered(_query(request, "project", required=True))
+    return ft_runner.status(str(project))
+
+
+def _runner_start(body):
+    from ..takt_core.util import validate_project
+
+    project = validate_project(str_arg(body, "project", required=True))
+    mode = str_arg(body, "mode") or "once"
+    if mode not in ("once", "watch"):
+        raise ToolError("mode must be once or watch")
+    return ft_runner.start(project, takt_bridge.find_takt(), mode)
+
+
+def _runner_stop(body):
+    from ..takt_core.util import validate_project
+
+    project = validate_project(str_arg(body, "project", required=True))
+    return ft_runner.stop(project)
+
+
+takt_enqueue_http = _handle_post(_enqueue, "takt_enqueue")
+runner_start = _handle_post(_runner_start, "runner_start")
+runner_stop = _handle_post(_runner_stop, "runner_stop")
+
+
+@_handle
+def runner_status(request):
+    return _runner_status_for(request)
 
 
 # ---------------------------------------------------------------------------

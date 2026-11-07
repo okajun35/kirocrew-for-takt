@@ -63,6 +63,17 @@ export const S = {
   taktEmptyNoTasksHint: 'Bot に takt_enqueue でタスクを投入してもらってください。',
   runSelectHint: '上の表で実行中/完了のタスクをクリックすると、ログとレポートがここに出ます（pending はまだ選べません）',
   runNotStarted: 'このタスクはまだ実行されていません（takt run 開始まで待ってください）',
+
+  enqueueTitle: 'タスク投入',
+  enqueueTask: 'タスク名（takt add 相当）',
+  enqueueSubmit: '投入',
+
+  runnerTitle: 'runner（takt run 相当）',
+  runnerRunning: (pid: number, mode: string) => `実行中 pid=${pid} (${mode})`,
+  runnerStopped: '停止中',
+  runnerStartOnce: 'run（1回）',
+  runnerStartWatch: 'watch（常駐）',
+  runnerStop: '停止',
   colStatus: '状態',
   colName: '名前',
   colWorkflow: 'workflow',

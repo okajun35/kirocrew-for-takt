@@ -9,10 +9,11 @@ import {
   StatCard,
 } from '@kirocrew/app-sdk/ui'
 import { fmtDateTime } from '@kirocrew/app-sdk'
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
+import { Btn, Input, Modal } from '@kirocrew/app-sdk/ui'
 import { S } from './strings'
-import type { TaktGoalFilesResult, TaktTasksResult } from './types'
+import type { RunnerStatus, TaktGoalFilesResult, TaktTasksResult } from './types'
 import { API, badgeVariant, enc, errMessage, shortId } from './util'
 import RunDetail from './RunDetail'
 
@@ -65,6 +66,8 @@ export default function TaktTab({
         ))}
       </div>
 
+      <EnqueueButton project={project} active={active} />
+
       <Card>
         <CardTitle>{S.tabTakt}</CardTitle>
         {!tasks.length ? (
@@ -116,6 +119,8 @@ export default function TaktTab({
         )}
       </Card>
 
+      <RunnerCard project={project} active={active} />
+
       {runSlug ? (
         <RunDetail project={project} slug={runSlug} active={active} />
       ) : tasks.length ? (
@@ -128,6 +133,102 @@ export default function TaktTab({
     </div>
   )
 }
+
+function EnqueueButton({ project, active }: { project: string; active: boolean }) {
+  const api = useAppApi()
+  const qc = useQueryClient()
+  const [open, setOpen] = useState(false)
+  const [task, setTask] = useState('')
+  const [workflow, setWorkflow] = useState('default')
+  const [err, setErr] = useState<string | null>(null)
+  const mut = useMutation({
+    mutationFn: () =>
+      api.post<{ result: unknown; taskName: string | null }>(`${API}/takt/enqueue`, {
+        project, task, workflow, autoPr: false,
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['takt-tasks', project] })
+      setOpen(false); setTask(''); setErr(null)
+    },
+    onError: (e) => setErr(errMessage(e)),
+  })
+  return (
+    <div className="flex justify-end">
+      <Btn primary onClick={() => setOpen(true)}>{S.enqueueTitle}</Btn>
+      <Modal
+        open={open} onClose={() => setOpen(false)} title={S.enqueueTitle}
+        footer={
+          <>
+            <Btn onClick={() => setOpen(false)}>{S.cancel}</Btn>
+            <Btn primary disabled={!task.trim() || mut.isPending} onClick={() => mut.mutate()}>
+              {S.enqueueSubmit}
+            </Btn>
+          </>
+        }
+      >
+        <p className="text-sm text-muted mb-1">{S.enqueueTask}</p>
+        <Input value={task} onChange={(e) => setTask(e.target.value)} className="w-full mb-2" />
+        <p className="text-sm text-muted mb-1">{S.colWorkflow}</p>
+        <Input value={workflow} onChange={(e) => setWorkflow(e.target.value)} className="w-full" />
+        {err ? <ErrorNotice message={err} /> : null}
+      </Modal>
+    </div>
+  )
+}
+
+
+function RunnerCard({ project, active }: { project: string; active: boolean }) {
+  const api = useAppApi()
+  const qc = useQueryClient()
+  const [err, setErr] = useState<string | null>(null)
+  const q = useQuery({
+    queryKey: ['runner', project],
+    queryFn: () => api.get<RunnerStatus>(`${API}/takt/runner?project=${enc(project)}`),
+    refetchInterval: active ? 5000 : false,
+  })
+  const r = q.data?.runner
+  const start = useMutation({
+    mutationFn: (mode: 'once' | 'watch') =>
+      api.post(`${API}/takt/runner/start`, { project, mode }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['runner', project] }); setErr(null) },
+    onError: (e) => setErr(errMessage(e)),
+  })
+  const stop = useMutation({
+    mutationFn: () => api.post(`${API}/takt/runner/stop`, { project }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['runner', project] }); setErr(null) },
+    onError: (e) => setErr(errMessage(e)),
+  })
+  return (
+    <Card>
+      <div className="flex items-center gap-2 flex-wrap">
+        <CardTitle>{S.runnerTitle}</CardTitle>
+        {q.data?.running ? (
+          <Badge variant="ok">{S.runnerRunning(r?.pid ?? 0, r?.mode ?? '')}</Badge>
+        ) : (
+          <Badge variant="muted">{S.runnerStopped}</Badge>
+        )}
+        <span className="ml-auto flex gap-2">
+          <Btn disabled={q.data?.running || start.isPending} onClick={() => start.mutate('once')}>
+            {S.runnerStartOnce}
+          </Btn>
+          <Btn disabled={q.data?.running || start.isPending} onClick={() => start.mutate('watch')}>
+            {S.runnerStartWatch}
+          </Btn>
+          <Btn danger disabled={!q.data?.running || stop.isPending} onClick={() => stop.mutate()}>
+            {S.runnerStop}
+          </Btn>
+        </span>
+      </div>
+      {err ? <ErrorNotice message={err} /> : null}
+      {r?.logTail?.length ? (
+        <pre className="mt-2 text-[12px] text-muted whitespace-pre-wrap max-h-[160px] overflow-y-auto font-mono">
+          {r.logTail.join('\n')}
+        </pre>
+      ) : null}
+    </Card>
+  )
+}
+
 
 function TaktGoalFiles({ project, active }: { project: string; active: boolean }) {
   const api = useAppApi()

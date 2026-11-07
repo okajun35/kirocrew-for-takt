@@ -26,7 +26,7 @@ routes_mod = load_app_module("backend.routes")
 class RouteRegistrationTests(BackendTestCase):
     def test_register_routes_shape(self):
         routes = routes_mod.register_routes(self.ctx)
-        self.assertEqual(len(routes), 19)
+        self.assertEqual(len(routes), 23)
         for r in routes:
             self.assertIn(
                 r.method, {"GET", "POST", "PUT", "DELETE", "PATCH"}

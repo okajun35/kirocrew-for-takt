@@ -174,6 +174,18 @@ export interface DirectoriesResult {
   truncated: boolean
 }
 
+export interface RunnerStatus {
+  running: boolean
+  runner?: {
+    pid: number
+    mode: string
+    startedAt: string | null
+    log: string | null
+    logTail: string[]
+    exited?: boolean
+  } | null
+}
+
 export interface TaktConfigResult {
   global: { path: string; exists: boolean; config: Record<string, unknown>; error?: string }
   project: { path: string; exists: boolean; config: Record<string, unknown>; error?: string }
