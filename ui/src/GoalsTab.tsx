@@ -304,7 +304,11 @@ function GoalDetail({
                 <div className="mt-2 flex gap-2 items-center flex-wrap">
                   {q.options?.length ? (
                     q.options.map((opt) => (
-                      <Btn key={opt} onClick={() => { setAnswerFor(q.id); setAnswerText(opt) }}>
+                      <Btn
+                        key={opt}
+                        disabled={answerMut.isPending}
+                        onClick={() => submitAnswer(q.id, opt)}
+                      >
                         {opt}
                       </Btn>
                     ))
