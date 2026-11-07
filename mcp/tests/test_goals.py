@@ -100,18 +100,30 @@ class RunnerGuardTests(ForTaktTestCase):
         os.environ["TAKT_BIN"] = fake
         self.addCleanup(os.environ.pop, "TAKT_BIN", None)
 
-    def _pending(self, name):
-        import yaml
+    def _pending(self, *names, fail=False):
+        from unittest import mock
 
-        d = os.path.join(self.repo, ".takt")
-        os.makedirs(d, exist_ok=True)
-        p = os.path.join(d, "tasks.yaml")
-        doc = {"tasks": []}
-        if os.path.exists(p):
-            doc = yaml.safe_load(open(p).read()) or {"tasks": []}
-        doc["tasks"].append({"name": name, "status": "pending"})
-        with open(p, "w") as f:
-            yaml.safe_dump(doc, f)
+        from takt_core import takt_bridge
+
+        def fake_call(project, name, arguments, timeout=None):
+            self.assertEqual(name, "takt_list_tasks")
+            if fail:
+                raise ToolError("takt-mcp not found")
+            return {
+                "tasks": [{"name": n, "status": "pending"} for n in names]
+                + [{"name": "done-task", "status": "completed"}],
+                "nextOffset": None,
+            }
+
+        patcher = mock.patch.object(takt_bridge, "call_tool", side_effect=fake_call)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def test_listing_failure_fails_closed(self):
+        self._fake_takt()
+        self._pending(fail=True)
+        with self.assertRaises(ToolError):
+            mcp_call("takt_run", {"project": str(self.repo)})
 
     def test_foreign_pending_refused_then_allowed(self):
         self._fake_takt()

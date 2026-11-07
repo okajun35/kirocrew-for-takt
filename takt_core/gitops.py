@@ -147,7 +147,39 @@ def ensure_branch_not_checked_out(project, branch):
             )
 
 
-def integration_apply(goal_id, source, message=None, expected_revision=None):
+def _takt_branch_task(source, name):
+    """Whether *source* is TAKT's branch for task *name*.
+
+    TAKT names a task branch `takt/<timestamp>-<slug>` only when the task
+    runs (src/shared/utils/takt-branch-name.ts), so a goal's task record has
+    no branch at enqueue time and the branch has to be matched by name.
+    """
+    if not (name and source.startswith("takt/")):
+        return False
+    head, sep, slug = source[len("takt/"):].partition("-")
+    return bool(sep and head) and slug == name
+
+
+def _match_task(goal, source, source_sha, task_name):
+    open_tasks = [t for t in goal.get("tasks") or [] if t.get("state") != "integrated"]
+    if task_name is not None:
+        for t in open_tasks:
+            if t.get("taskName") == task_name:
+                return t
+        raise ToolError(f"no open task named {task_name!r} on this goal")
+    for t in open_tasks:
+        if t.get("branch") in (source, source_sha) or t.get("taskName") in (
+            source,
+            source_sha,
+        ):
+            return t
+    by_convention = [t for t in open_tasks if _takt_branch_task(source, t.get("taskName"))]
+    return by_convention[0] if len(by_convention) == 1 else None
+
+
+def integration_apply(
+    goal_id, source, message=None, expected_revision=None, task_name=None
+):
     """Merge source into the goal branch (ff or commit-tree merge).
 
     Runs inside the goals lock so the revision check, the ref update, and
@@ -158,6 +190,8 @@ def integration_apply(goal_id, source, message=None, expected_revision=None):
         raise ToolError("source must not start with '-'")
     if message is not None:
         check_str(message, "message")
+    if task_name is not None:
+        check_str(task_name, "taskName")
     holder = {}
 
     def mut(goal):
@@ -169,6 +203,10 @@ def integration_apply(goal_id, source, message=None, expected_revision=None):
         if not branch:
             raise ToolError("goal has no integration branch")
         project = goal["project"]
+        # Resolved before any ref moves: an unknown taskName must not leave
+        # the goal branch updated with nothing recorded.
+        source_sha = resolve_commit(project, source)
+        matched = _match_task(goal, source, source_sha, task_name)
         ensure_branch_not_checked_out(project, branch)
 
         check = integration_check(project, target=branch, source=source)
@@ -210,23 +248,14 @@ def integration_apply(goal_id, source, message=None, expected_revision=None):
                     f"{proc.stderr.strip() or proc.stdout.strip()}"
                 )
 
-        # Record on the goal: mark the matching task (by branch or task name)
-        # integrated; with no match the workLog entry alone records it.
+        # Record on the goal: mark the matched task integrated; with no match
+        # the workLog entry alone records it.
         source_sha = check["sourceSha"]
-        matched = None
-        for t in goal.get("tasks") or []:
-            if t.get("state") == "integrated":
-                continue
-            if t.get("branch") in (source, source_sha) or t.get("taskName") in (
-                source,
-                source_sha,
-            ):
-                t["state"] = "integrated"
-                t["integratedSha"] = source_sha
-                if not t.get("branch"):
-                    t["branch"] = source
-                matched = t
-                break
+        if matched is not None:
+            matched["state"] = "integrated"
+            matched["integratedSha"] = source_sha
+            if not matched.get("branch"):
+                matched["branch"] = source
         note = "" if matched else " (no matching task on this goal)"
         goals.append_worklog(
             goal,

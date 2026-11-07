@@ -182,6 +182,62 @@ class IntegrationApplyTests(ForTaktTestCase):
         self.assertEqual(got["tasks"][0]["state"], "integrated")
         self.assertEqual(got["tasks"][0]["integratedSha"], feat_sha)
 
+    def _add_unbranched_task(self, gid, name):
+        # Real shape: at enqueue time TAKT has not named the branch yet.
+        def add_task(g):
+            g["tasks"].append(
+                {
+                    "taskName": name,
+                    "workflow": "default",
+                    "enqueuedAt": "2026-01-01T00:00:00Z",
+                    "state": "queued",
+                    "branch": None,
+                    "integratedSha": None,
+                    "note": None,
+                }
+            )
+
+        ft_goals.update_goal(gid, None, add_task)
+
+    def test_apply_marks_task_named_explicitly(self):
+        goal = self.active_goal()
+        feat_sha = self.make_feat()
+        gid = goal["id"]
+        self._add_unbranched_task(gid, "task-1")
+        mcp_call(
+            "integration_apply",
+            {"goalId": gid, "source": "feat", "taskName": "task-1"},
+        )
+        got = mcp_call("goal_get", {"goalId": gid})
+        self.assertEqual(got["tasks"][0]["state"], "integrated")
+        self.assertEqual(got["tasks"][0]["integratedSha"], feat_sha)
+        self.assertEqual(got["tasks"][0]["branch"], "feat")
+
+    def test_apply_matches_takt_branch_name_convention(self):
+        goal = self.active_goal()
+        gid = goal["id"]
+        src = "takt/20261107T1254-readme-task"
+        branch(self.repo, src)
+        on(self.repo, src)
+        commit_file(self.repo, "r.txt", "r\n", "takt work")
+        on(self.repo, "main")
+        self._add_unbranched_task(gid, "readme-task")
+        mcp_call("integration_apply", {"goalId": gid, "source": src})
+        got = mcp_call("goal_get", {"goalId": gid})
+        self.assertEqual(got["tasks"][0]["state"], "integrated")
+        self.assertEqual(got["tasks"][0]["branch"], src)
+
+    def test_apply_unknown_task_name_refuses_before_ref_update(self):
+        goal = self.active_goal()
+        self.make_feat()
+        before = sha(self.repo, goal["branch"])
+        with self.assertRaises(ToolError):
+            mcp_call(
+                "integration_apply",
+                {"goalId": goal["id"], "source": "feat", "taskName": "nope"},
+            )
+        self.assertEqual(sha(self.repo, goal["branch"]), before)
+
     def test_apply_conflict_raises(self):
         goal = self.active_goal()
         self.make_feat(filename="a.txt", content="feat change\n")

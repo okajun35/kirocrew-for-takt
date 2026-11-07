@@ -334,8 +334,13 @@ def h_integration_apply(args):
     source = str_arg(args, "source", required=True)
     message = str_arg(args, "message")
     expected = int_arg(args, "expectedRevision")
+    task_name = str_arg(args, "taskName")
     return ft_git.integration_apply(
-        goal_id, source, message=message, expected_revision=expected
+        goal_id,
+        source,
+        message=message,
+        expected_revision=expected,
+        task_name=task_name,
     )
 
 
@@ -644,13 +649,14 @@ TOOLS = [
     },
     {
         "name": "integration_apply",
-        "description": "Integrate source into the goal's branch (fast-forward or merge commit via commit-tree + update-ref CAS). Requires status=active; refuses on conflict or when the goal branch is checked out in a worktree.",
+        "description": "Integrate source into the goal's branch (fast-forward or merge commit via commit-tree + update-ref CAS). Requires status=active; refuses on conflict or when the goal branch is checked out in a worktree. Pass taskName (the goal's task record) so the task is marked integrated; without it the task is matched by recorded branch, or by TAKT's `takt/<timestamp>-<taskName>` branch naming when exactly one task fits.",
         "inputSchema": _schema(
             {
                 "goalId": _OBJECTIVE,
                 "source": _OBJECTIVE,
                 "message": _OBJECTIVE,
                 "expectedRevision": _REVISION,
+                "taskName": _OBJECTIVE,
             },
             ["goalId", "source"],
         ),

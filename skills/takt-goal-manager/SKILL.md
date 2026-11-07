@@ -31,7 +31,7 @@ Hard rules:
 
 - `takt_tasks` to check task state. Use `takt_run_detail` for details of a run, `takt_tell` to send instructions to a running task.
 - For a completed task: `integration_check` (target = goal branch, source = task branch).
-  - `clean_merge` or `fast_forward` → `integration_apply`.
+  - `clean_merge` or `fast_forward` → `integration_apply`, passing `taskName` (the goal's task record name) so the task is marked integrated. TAKT names the branch only when the task runs, so the goal's task record has no branch until then.
   - `conflict`, or task `failed` / `exceeded` → `goal_ask` the user for a decision. Do not push forward on a guess.
 - Record what you did every time with `goal_log`.
 
