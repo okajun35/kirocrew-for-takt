@@ -214,8 +214,12 @@ not on the npm registry.
 
 - `goal_complete` takes `expectedRevision` too (v0.1 DESIGN §4 says all write
   tools accept it).
-- `integration_apply` links a TAKT task to a goal by `branch` match with a
-  `taskName` fallback (takt-mcp's enqueue result carries no branch).
+- `integration_apply` takes an optional `taskName` naming the goal's task
+  record to mark integrated. takt-mcp's enqueue result carries no branch
+  (TAKT names it `takt/<timestamp>-<task>` only when the task runs), so
+  without `taskName` the task is matched by recorded branch, then task name,
+  then that naming convention when exactly one open task fits. An unknown
+  `taskName` is refused before any ref moves.
 - `h_takt_enqueue` re-checks `status == "active"` and project equality inside
   the `update_goal` mutator; on failure the TAKT task stays enqueued but the
   goal records nothing and the response says so (`recorded: false` +
@@ -223,8 +227,11 @@ not on the npm registry.
 - `takt_run_log` returns offset-paged **parsed NDJSON records** (plus
   `raw`/`truncated` flags) rather than raw text, and a `reset: true` flag when
   the requested offset is past the current file size.
-- The UI exposes no integration-apply, enqueue, goal create/complete, cron/IRQ,
-  SSE, or TAKT requeue/stop controls — those stay MCP-only by design.
+- The UI exposes no integration-apply, goal create/complete, cron/IRQ, SSE,
+  or per-task TAKT requeue/stop controls — those stay MCP-only by design.
+  Beyond the original designs it does enqueue TAKT tasks (`takt add`
+  equivalent, not linked to a goal) and start/stop the project runner
+  (`takt run` / `takt watch`), so TAKT can be driven without a terminal.
 - Beyond DESIGN-ui: the settings tab (takt-mcp pin, `~/.takt/config.yaml`
   whitelist edit), `POST /directories`, and `POST /projects/clone` were
   added after reviewing the aidlc reference app; project `.takt/` files
