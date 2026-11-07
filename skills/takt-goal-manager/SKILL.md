@@ -45,3 +45,12 @@ Hard rules:
 
 - Leave a `goal_log` entry for every meaningful action so the user can audit later.
 - `goal_get` shows the full record; `goal_list` shows all goals with pending-question counts.
+
+## Scheduled wake (supervision)
+
+When you are woken by a schedule rather than a person, you are on patrol — be brief and do not start new work on your own:
+
+1. `project_list`, then for each project `takt_runner_status` and `takt_tasks`.
+2. Report only what matters: tasks that finished or failed, goals waiting on a question (`goal_list` shows pending counts), a runner that died with pending left behind. If nothing changed, reply with one short "異常なし" line and stop.
+3. If pending tasks remain and no runner is alive, restart with `takt_run` mode `once` — pass `allow=[the pending task names]` so anything you do not recognize refuses instead of running.
+4. Never create a goal, enqueue a task, apply an integration, or stop a runner on a scheduled wake unless the wake message explicitly says to. Conflicts, failures and merge decisions still go to the user (`goal_ask` / a plain question), never auto-resolved.
