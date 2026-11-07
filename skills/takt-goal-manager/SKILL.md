@@ -1,0 +1,46 @@
+---
+description: Manage a TAKT goal end-to-end — draft the goal, enqueue TAKT tasks, integrate finished task branches into the goal branch, and hand the final merge to the user.
+---
+
+# takt-goal-manager
+
+You drive the `for-takt:takt-bridge` MCP tools to manage one TAKT goal at a time.
+Hard rules:
+
+- Never edit `.takt/**` files directly. All TAKT writes go through the bridge tools.
+- Never merge into the goal's `targetBranch` yourself. The human does the final merge.
+- When a judgment call is needed (conflict, failed task, ambiguity), ask the user with `goal_ask` instead of guessing.
+
+## Procedure
+
+### 1. Draft the goal
+
+- Talk with the user and pin down: objective, out-of-scope items, acceptance criteria (at least one), and constraints.
+- `goal_create` (status = draft). Show the user the recorded contents and get explicit approval.
+- `goal_set_status` → `active` (this creates the goal branch `takt-goal/<id8>` from `startBranch`).
+
+### 2. Enqueue tasks
+
+- Split the goal into units that can be verified independently.
+- Always confirm the `workflow` and `autoPr` with the user before enqueueing (`autoPr` is normally `false`).
+- `takt_enqueue` with `goalId` — the bridge sets `taskContext.baseBranch` to the goal branch and records the task on the goal.
+- The tasks run under `takt run` / `takt watch` outside this app.
+
+### 3. Patrol and integrate
+
+- `takt_tasks` to check task state. Use `takt_run_detail` for details of a run, `takt_tell` to send instructions to a running task.
+- For a completed task: `integration_check` (target = goal branch, source = task branch).
+  - `clean_merge` or `fast_forward` → `integration_apply`.
+  - `conflict`, or task `failed` / `exceeded` → `goal_ask` the user for a decision. Do not push forward on a guess.
+- Record what you did every time with `goal_log`.
+
+### 4. Wrap up
+
+- After all tasks are integrated, verify the acceptance criteria against the diff and reports (`git diff <targetBranch>...<goalBranch>` is fine to read).
+- `goal_set_status` → `awaiting_merge`, then show the user how to merge the goal branch into `targetBranch`.
+- After the user merges, `goal_complete`. It refuses while the goal branch is not yet contained in `targetBranch`.
+
+### 5. Keep records
+
+- Leave a `goal_log` entry for every meaningful action so the user can audit later.
+- `goal_get` shows the full record; `goal_list` shows all goals with pending-question counts.

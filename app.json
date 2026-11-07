@@ -1,0 +1,29 @@
+{
+  "name": "for-takt",
+  "version": "0.2.0",
+  "displayName": "TAKT Bridge",
+  "description": "Let a Kiro Crew Bot manage TAKT goals: goal records, git merge-tree integration checks, and TAKT task enqueue/inspection through takt-mcp.",
+  "author": "hddwm390",
+  "license": "MIT",
+  "minKiroCrewVersion": "0.13.0",
+  "tags": ["takt", "developer-tools", "workflows"],
+  "iconPath": "assets/icon.png",
+  "agents": ["agents/takt-manager.json"],
+  "skills": ["skills/takt-goal-manager"],
+  "mcpServers": {
+    "takt-bridge": { "command": "python3", "args": ["mcp/server.py"] }
+  },
+  "backend": {
+    "hooks": { "routes": "backend.routes:register_routes" }
+  },
+  "ui": {
+    "entry": "dist/index.mjs",
+    "pages": [
+      { "route": "/apps/for-takt", "label": "TAKT", "iconUrl": "icon.svg" }
+    ],
+    "sidebar": { "section": "Apps", "order": 20 }
+  },
+  "permissions": { "api": ["/api/apps/for-takt"], "events": [], "mcpTools": [], "storage": false, "cron": false },
+  "dependencies": { "commands": ["git"], "optionalCommands": ["takt-mcp", "takt"] },
+  "platform": { "os": ["macos", "linux"], "installMode": "server" }
+}
