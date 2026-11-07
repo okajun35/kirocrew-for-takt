@@ -96,7 +96,7 @@ class ProtocolTests(ForTaktTestCase):
         tools = resp["result"]["tools"]
         names = {t["name"] for t in tools}
         expected = {
-            "goal_create", "goal_list", "goal_get", "goal_update",
+            "goal_create", "project_list", "goal_list", "goal_get", "goal_update",
             "goal_set_status", "goal_log", "goal_ask", "goal_answer",
             "goal_withdraw_question", "goal_task_update", "goal_complete",
             "integration_check", "integration_apply",

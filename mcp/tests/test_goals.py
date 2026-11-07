@@ -52,6 +52,17 @@ class GoalCreateTests(ForTaktTestCase):
         self.assertEqual(filtered["goals"], [])
 
 
+class ProjectListTests(ForTaktTestCase):
+    def test_project_list_reflects_registration(self):
+        out = mcp_call("project_list", {})
+        self.assertEqual(out["projects"], [])
+        goal = self.create_goal()  # auto-registers the project
+        out = mcp_call("project_list", {})
+        self.assertEqual(len(out["projects"]), 1)
+        self.assertEqual(out["projects"][0]["path"], str(self.repo))
+        self.assertIn("hasTakt", out["projects"][0])
+
+
 class TransitionTests(ForTaktTestCase):
     def set_status(self, goal_id, status, reason="r", **kw):
         return mcp_call(

@@ -15,8 +15,9 @@ Hard rules:
 
 ### 1. Draft the goal
 
-- Talk with the user and pin down: objective, out-of-scope items, acceptance criteria (at least one), and constraints.
-- `goal_create` (status = draft). Show the user the recorded contents and get explicit approval.
+- **Resolve the project yourself first.** Call `project_list`. If exactly one project is registered, use it without asking. If the user's message names a repo directory, that IS the project. Only ask when zero or several registered projects genuinely match.
+- **Infer, then confirm once — do not interview.** From the user's message, draft: objective, out-of-scope, acceptance criteria (at least one, concrete and checkable), and constraints. For vague requests like "動作確認用" pick a reasonable smoke-test objective yourself rather than asking what to verify.
+- `goal_create` (status = draft). Show the user the recorded contents and get explicit approval — ONE confirmation for the whole draft, not one question per field.
 - `goal_set_status` → `active` (this creates the goal branch `takt-goal/<id8>` from `startBranch`).
 
 ### 2. Enqueue tasks

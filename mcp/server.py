@@ -9,6 +9,7 @@ gateway venv has no mcp package.
 import json
 import os
 import sys
+from pathlib import Path
 import traceback
 
 # The app root goes on sys.path so `takt_core` resolves as a real package.
@@ -77,6 +78,26 @@ def h_goal_create(args):
     except Exception as e:
         print(f"for-takt: could not register project {project}: {e}", file=sys.stderr)
     return goal
+
+
+def h_project_list(args):
+    """Registered projects (path, name, hasTakt) for discovery."""
+    out = []
+    for p in ft_projects.list_projects():
+        has_takt = None
+        try:
+            has_takt = (Path(p["path"]) / ".takt").is_dir()
+        except OSError:
+            pass
+        out.append(
+            {
+                "path": p["path"],
+                "name": p.get("name"),
+                "hasTakt": has_takt,
+                "missing": p.get("missing", False),
+            }
+        )
+    return {"projects": out}
 
 
 def h_goal_list(args):
@@ -453,6 +474,12 @@ TOOLS = [
             ["project", "objective", "acceptanceCriteria"],
         ),
         "handler": h_goal_create,
+    },
+    {
+        "name": "project_list",
+        "description": "List projects registered with this app (path, name, hasTakt). Call this FIRST when the user does not name a project — pick it yourself when exactly one is registered.",
+        "inputSchema": _schema({}, []),
+        "handler": h_project_list,
     },
     {
         "name": "goal_list",
