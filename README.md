@@ -196,9 +196,11 @@ Notes on the write endpoints:
 ## Test
 
 ```
-/home/hddwm390/tmp/KiroCrew/.venv/bin/python -m unittest discover -s mcp/tests
-/home/hddwm390/tmp/KiroCrew/.venv/bin/python -m unittest discover -s backend/tests
+<KiroCrew>/.venv/bin/python -m unittest discover -s mcp/tests
+<KiroCrew>/.venv/bin/python -m unittest discover -s backend/tests
 ```
+
+(`<KiroCrew>` = local checkout of the Kiro Crew repository.)
 
 (Any Python ≥3.9 works for `mcp/tests`; `backend/tests` needs `aiohttp`/`yaml`,
 which the gateway venv provides.)

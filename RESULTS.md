@@ -5,7 +5,7 @@ DESIGN.md に基づく実装の結果まとめ。2026-11-07 時点。
 ## 1. 結果サマリ
 
 - **`python3 -m unittest discover -s mcp/tests` : 52 件全件成功**（約 5 秒）
-- 実 `takt-mcp`（`/home/hddwm390/.nvm/versions/node/v24.13.0/bin/takt-mcp`）を使った
+- 実 `takt-mcp`（`~/.nvm/versions/node/v24.13.0/bin/takt-mcp`）を使った
   往復テストを含む。バイナリが無い環境では自動スキップ
 - 実 stdio 経路での E2E スモーク（goal 作成 → active → integration_check →
   integration_apply）も手動検証済み

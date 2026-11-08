@@ -3,7 +3,7 @@
   "version": "0.2.0",
   "displayName": "TAKT Bridge",
   "description": "Let a Kiro Crew Bot manage TAKT goals: goal records, git merge-tree integration checks, and TAKT task enqueue/inspection through takt-mcp.",
-  "author": "hddwm390",
+  "author": "okajun35",
   "license": "MIT",
   "minKiroCrewVersion": "0.13.0",
   "tags": ["takt", "developer-tools", "workflows"],

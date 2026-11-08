@@ -47,7 +47,7 @@ for-takt/
   "version": "0.1.0",
   "displayName": "TAKT Bridge",
   "description": "Let a Kiro Crew Bot manage TAKT goals: goal records, git merge-tree integration checks, and TAKT task enqueue/inspection through takt-mcp.",
-  "author": "hddwm390",
+  "author": "okajun35",
   "license": "MIT",
   "minKiroCrewVersion": "0.13.0",
   "tags": ["takt", "developer-tools", "workflows"],
@@ -200,7 +200,7 @@ for-takt/
 
 - 実行ファイルの探索順: 環境変数 `TAKT_MCP_BIN` → `shutil.which("takt-mcp")` →
   `~/.nvm/versions/node/*/bin/takt-mcp` のうち最新バージョン。見つからなければ `ToolError`（設定方法を含める）。
-  （この環境では `/home/hddwm390/.nvm/versions/node/v24.13.0/bin/takt-mcp`）
+  （例: `~/.nvm/versions/node/v24.13.0/bin/takt-mcp`）
 - `takt-mcp` は `#!/usr/bin/env node` なので、起動時の `PATH` の先頭に見つけたバイナリのディレクトリを足す。
 - **呼び出しごとに** `takt-mcp --tool-set all` を `cwd=<project>` で起動する
   （takt-mcp の許可ルートは起動時の cwd。`src/app/mcp/index.ts`）。

@@ -7,7 +7,7 @@ UI は「見る」が中心。書き込みは goal の一時停止・再開と�
 
 - v0.1 の制約はすべて引き継ぐ。特に **TAKT の `.takt/` 配下には一切書き込まない**。
 - バックエンドは `backend.hooks` の routes（gateway プロセス内で動く Python）。別プロセスのバックエンドは作らない。
-  - gateway の interpreter は `/home/hddwm390/tmp/KiroCrew/.venv/bin/python`（Python 3.12）。`aiohttp` 3.14 と `PyYAML` 6.0 が入っている。
+  - gateway の interpreter は Kiro Crew 本体の venv（`<KiroCrew>/.venv/bin/python`、Python 3.12）。`aiohttp` 3.14 と `PyYAML` 6.0 が入っている。
     この 2 つだけは import してよい。`kiro_crew` は import しない。
   - hooks のモジュールはファイルパスから合成パッケージとして読み込まれる（`src/kiro_crew/apps/module_loader.py`）。
     アプリのルートが合成パッケージのルートになるので、**アプリ内の import はすべて相対 import** にする。
@@ -211,7 +211,7 @@ TAKT が書き換えている最中に読むと失敗することがあるので
 ## 7. テスト
 
 - Python（gateway の interpreter で実行する）：
-  `/home/hddwm390/tmp/KiroCrew/.venv/bin/python -m unittest discover -s mcp/tests` と `-s backend/tests` の両方が全件成功すること。
+  `<KiroCrew>/.venv/bin/python -m unittest discover -s mcp/tests` と `-s backend/tests` の両方が全件成功すること。
 - `takt_files` のテスト（一時ディレクトリに `.takt` を作る）：
   - tasks.yaml の要約と件数、goal との突き合わせ。
   - 壊れた YAML で `retryable` が返る。5 MiB 超で 400。
