@@ -1,6 +1,6 @@
 # for-takt: 実装結果レポート
 
-DESIGN.md に基づく実装の結果まとめ。2026-11-07 時点。
+DESIGN.md（v0.1）に基づく実装の結果まとめ。2026-11-07 時点。v0.2（UI/backend hooks）は DESIGN-ui.md を参照。
 
 ## 1. 結果サマリ
 
@@ -9,8 +9,8 @@ DESIGN.md に基づく実装の結果まとめ。2026-11-07 時点。
   往復テストを含む。バイナリが無い環境では自動スキップ
 - 実 stdio 経路での E2E スモーク（goal 作成 → active → integration_check →
   integration_apply）も手動検証済み
-- §11 完了条件の 1（テスト全件成功）は達成。2・3（`kirocrew app install` と
-  チャット上の動作）は未検証
+- §11 完了条件はすべて達成。2・3（`kirocrew app install` → 信頼設定 → enable、
+  チャット上の一巡、Bot 化しての自律動作）も実機で確認済み（docs/screenshots/ 参照）
 
 ## 2. 作成ファイル
 
@@ -103,14 +103,17 @@ integration_apply→ newSha=feat の SHA、diffstat g.txt +1、workLog kind=inte
 
 - `takt_cleanup_tasks` / `takt_stop_goal_task` / `takt_remove_goal_task` は
   設計どおり中継していない。
-- §10 の範囲外（UI、cron 巡回、targetBranch への自動マージなど）は未実装。
+- §10 の範囲外のうち、UI・backend hooks は v0.2（DESIGN-ui.md）で実装済み。
+  cron 巡回はホスト側の cron 設定（`kirocrew cron add`）で運用中。
+  targetBranch への自動マージは設計どおり未実装のまま（人がマージする）。
 
-## 8. 次のステップ（§11 完了条件の残り）
+## 8. §11 完了条件 2・3 の確認結果（済）
 
 ```
 kirocrew app install ~/tmp/KiroCrew-app/for-takt   # → 信頼設定
 kirocrew app enable for-takt                        # → ~/.kiro/agents/ に生成
 ```
 
-その後、Kiro Crew のチャットで takt-manager を選び、テスト用リポジトリで
-`goal_create → active → takt_enqueue → takt_tasks` の一巡を確認する。
+実施済み。チャットで takt-manager を選んで `goal_create → active →
+takt_enqueue → takt_tasks` の一巡を確認し、Bot（TAKT Manager）への切替と
+定期起床（`kirocrew cron add`）での自律動作も確認済み。
